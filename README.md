@@ -81,3 +81,7 @@ plugins/
     skills/tabia-cli/SKILL.md       ← the skill
     README.md
 ```
+
+## License
+
+[MIT](LICENSE) © Tabia Health
