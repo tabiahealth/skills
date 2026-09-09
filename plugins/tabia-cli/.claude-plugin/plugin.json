@@ -1,0 +1,19 @@
+{
+  "name": "tabia-cli",
+  "description": "Reaching a deployed Tabia environment from the command line with the `tabia` CLI: profiles and personal access tokens, reading through `tabia ls` and `tabia api`, and moving care pathways, flows and surveys between environments or organizations with export/plan/resolve/import. Encodes the guardrails that matter — personal data stays out of the transcript, and nothing is written to production without a human at the prompt.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Tabia Health",
+    "url": "https://github.com/tabiahealth"
+  },
+  "homepage": "https://github.com/tabiahealth/skills/tree/main/plugins/tabia-cli",
+  "keywords": [
+    "tabia",
+    "cli",
+    "care-pathway",
+    "flow",
+    "survey",
+    "solution-package",
+    "healthcare"
+  ]
+}
