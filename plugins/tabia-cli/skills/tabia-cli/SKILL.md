@@ -324,12 +324,17 @@ Cross-profile is the normal case: the active profile is the source, the target i
 explicitly on `resolve` and `import`. Check you have them the right way round — an
 import into the wrong organization is the failure mode this naming exists to prevent.
 
-### What the package does not carry
+### What the package carries, and what it does not
 
-Message channels and templates are not carried, and surface as external references to
-resolve. A *referenced* pathway is not dragged in, only flows and surveys. A pathway
-flow node's `data.flow` is never placeholdered, so that flow is not discovered. No
-patient data of any kind.
+Flows, surveys, message templates and message channels are carried: naming one anywhere in
+the file pulls it in. A *referenced* pathway is not — it stays a reference for the person
+importing to resolve, so that packaging one care line never drags in a second.
+
+A pathway flow node's `data.flow` is never placeholdered, so that flow is not discovered.
+Credentials never travel: a template is asked which integration to use, and a channel
+arrives with none. No patient data of any kind.
+
+To write a package rather than move one, see the `solution-packages` skill.
 
 ## Writes: the rules
 
