@@ -22,11 +22,27 @@ It is a supported way to build: the format is a documented contract, and the imp
 the same code path either way. A package written by hand is how a solution gets composed
 once and installed in many organizations.
 
+## Somewhere to work
+
+Everything below writes files. Put them in a temporary directory outside any repository —
+a package is configuration for one pair of environments, worthless once either side
+changes, and a stray `solution.json` in `git status` is one `git add .` from being
+committed:
+
+```bash
+work=$(mktemp -d)        # or the session scratchpad; anywhere but the working tree
+```
+
+Delete it when the job is done. Keeping a package is the user's decision, not a default.
+
 ## Never guess the format — ask for it
 
 ```bash
 tabia api solution-package/schema > "$work/schema.json"
 ```
+
+`tabia api` takes a path under `/apiv1`, so that is a `GET` of
+`/apiv1/solution-package/schema`.
 
 It answers with the shape generated from the classes that read the file, so it cannot
 drift from what the import accepts. Laid out the way an OpenAPI document is:
@@ -55,7 +71,7 @@ tabia export --pathway 42 -o "$work/scaffold.json"
 Edit that. For a solution with no ancestor, export the closest thing that exists and
 replace its contents — the skeleton is worth more than the specific pathway.
 
-Write packages **outside any repository**, in `mktemp -d` or the session scratchpad.
+Write it into the working directory from the start of this skill, never into a repository.
 
 ## The rules a schema cannot express
 
