@@ -1,6 +1,6 @@
 {
   "name": "tabia-cli",
-  "description": "Reaching a deployed Tabia environment from the command line with the `tabia` CLI: profiles and personal access tokens, reading through `tabia ls` and `tabia api`, and moving care pathways, flows and surveys between environments or organizations with export/plan/resolve/import. Encodes the guardrails that matter — personal data stays out of the transcript, and nothing is written to production without a human at the prompt.",
+  "description": "Reaching a deployed Tabia environment from the command line with the `tabia` CLI: profiles and personal access tokens, reading through `tabia ls` and `tabia api`, and moving care pathways, flows and surveys between environments or organizations with export/plan/resolve/import \u2014 or writing a solution as a package file in the first place. Encodes the guardrails that matter \u2014 personal data stays out of the transcript, and nothing is written to production without a human at the prompt.",
   "version": "1.0.0",
   "author": {
     "name": "Tabia Health",
@@ -14,6 +14,7 @@
     "flow",
     "survey",
     "solution-package",
-    "healthcare"
+    "healthcare",
+    "authoring"
   ]
 }

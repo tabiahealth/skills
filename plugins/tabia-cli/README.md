@@ -58,6 +58,13 @@ just say what you want in a deployed environment and Claude Code will pick the s
 > "List the diabetes pathways in staging for acme"
 >
 > "Move pathway 42 from staging/acme to production/acme"
+>
+> "Write me a package for a hypertension care line with its reminder flow"
 
-See [`SKILL.md`](skills/tabia-cli/SKILL.md) for the full workflow, the personal-data rules and
-the troubleshooting table.
+Two skills ship here:
+
+- [`tabia-cli`](skills/tabia-cli/SKILL.md) — the full workflow, the personal-data rules and the
+  troubleshooting table.
+- [`solution-packages`](skills/solution-packages/SKILL.md) — writing a package file rather than
+  only moving one: asking the platform for the format, the rules a schema cannot express, and what
+  each kind arrives as once imported.
