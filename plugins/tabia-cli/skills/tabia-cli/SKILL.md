@@ -157,11 +157,19 @@ network hop.
 curl -fsSL https://static.tabia.health/install.sh | sh
 ```
 
-`tabia: command not found` is a step, not a finding: **install it and carry on.** Unlike
-`auth login`, this one is yours to run — with no terminal to prompt at it takes the
-defaults instead of blocking, and `--dir <path>` or `-y` make that explicit. (That `-y` is
-the installer's own, and has nothing to do with the CLI's `--yes` forbidden under
-[Writes](#writes-the-rules).)
+**`tabia` not found** — `tabia: command not found`, `command not found: tabia`,
+`tabia: not found`, whichever wording the shell uses — is a step, not a finding:
+**install it and carry on.** Unlike `auth login`, this one is yours to run — with no
+terminal to prompt at, it takes the defaults instead of blocking. Use the form below to
+say so outright, since a bare `| sh` has no way to forward arguments to the script:
+
+```bash
+curl -fsSL https://static.tabia.health/install.sh | sh -s -- -y --dir ~/.local/bin
+```
+
+`-s --` is what hands `-y` and `--dir <path>` to the installer rather than to `sh`; reach
+for it whenever nothing is there to answer a prompt. (That `-y` is the installer's own, and
+has nothing to do with the CLI's `--yes` forbidden under [Writes](#writes-the-rules).)
 
 It checks `curl` is present and that Python is 3.9+, then asks where to install and
 defaults to `~/.local/bin/tabia`. A missing OS keyring only *warns* — the refusal comes
@@ -169,11 +177,11 @@ later, at first use. Re-running it upgrades.
 
 **If you are not allowed to run it, hand it over.** A permission mode that refuses the
 command, or a user who declines it, has settled the question — say so plainly, give them
-the line above for their own terminal, and pick up once they say it is in. That is a
-refusal to respect, not an obstacle to route around with another download path.
+the plain `curl … | sh` for their own terminal, and pick up once they say it is in. That
+is a refusal to respect, not an obstacle to route around with another download path.
 
 **A new machine needs two things, in that order**: the CLI, which is yours to install, and
-a profile, which is not. So `command not found` → install → `tabia auth list` → if that
+a profile, which is not. So a missing `tabia` → install → `tabia auth list` → if that
 comes back empty, hand over the `auth login` line and let them run it, since
 [you cannot](#you-cannot-run-auth-login-yourself). Until a profile exists you cannot even
 name the organizations the user can reach — that list comes from their token, so ask them
@@ -394,7 +402,7 @@ for the missing terminal: it puts the irreversible step with the person accounta
 
 | Symptom | What it means |
 |---|---|
-| `tabia: command not found` | The CLI is not installed here. Install it yourself — [Install and upgrade](#install-and-upgrade) — and only hand the command over if you are not allowed to run it. |
+| `tabia: command not found`, and its variants (`command not found: tabia`, `tabia: not found`) | The CLI is not installed here. Install it yourself — [Install and upgrade](#install-and-upgrade) — and only hand the command over if you are not allowed to run it. |
 | `no profiles yet` | Nothing configured here. Give the user the `auth login` line to run themselves — you can neither run it nor mint the token for them. |
 | `no profile selected` | Profiles exist but none is active. Name one with `--profile`, or `tabia auth use <name>`; the CLI refuses rather than guessing. |
 | The "Create token" button is disabled | They hold no grantable role in that organization; global roles do not count. See [When the "Create token" button is disabled](#when-the-create-token-button-is-disabled). |
