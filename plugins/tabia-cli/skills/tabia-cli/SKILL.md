@@ -154,14 +154,14 @@ network hop.
 curl -fsSL https://static.tabia.health/install.sh | sh
 ```
 
-That is the front door; it checks `bash` and `gh` are present, that `gh` is signed in and
-can read the CLI's source repository, and that Python is 3.9+, then asks where to install
-and defaults to `~/.local/bin/tabia`. A missing OS keyring only *warns* — the refusal
-comes later, at first use. Re-running it upgrades.
+That is the front door; it checks `curl` is present and that Python is 3.9+, then asks
+where to install and defaults to `~/.local/bin/tabia`. A missing OS keyring only *warns*
+— the refusal comes later, at first use. Re-running it upgrades.
 
-**The CLI's source repository is private.** The installer will stop unless the GitHub
-account `gh` is signed in as has been granted read access to it. If that check fails, the
-person needs access from Tabia — it is not something to work around.
+**Nothing about GitHub is needed to install.** The CLI is downloaded straight from
+`static.tabia.health`, which carries whatever the source repository last published; that
+repository stays private, but no account, sign-in or `gh` stands between a person and the
+installer. What they still need from Tabia is a token in the environment itself.
 
 Unlike `auth login`, **the installer you can run**: with no terminal to prompt at it takes
 the defaults instead of blocking, and `--dir <path>` or `-y` make that explicit. (That
@@ -380,7 +380,6 @@ for the missing terminal: it puts the irreversible step with the person accounta
 |---|---|
 | `no profiles yet` | Nothing configured here. Give the user the `auth login` line to run themselves — you can neither run it nor mint the token for them. |
 | `no profile selected` | Profiles exist but none is active. Name one with `--profile`, or `tabia auth use <name>`; the CLI refuses rather than guessing. |
-| The installer stops at the GitHub check | The CLI's source repository is private and this account cannot read it. The person needs access from Tabia; there is nothing to work around. |
 | The "Create token" button is disabled | They hold no grantable role in that organization; global roles do not count. See [When the "Create token" button is disabled](#when-the-create-token-button-is-disabled). |
 | `EOFError` from `auth login`, or at a production confirmation | No terminal in a tool call. The first is expected and the user runs the command themselves; the second is the guard working — report the abort, never retry with `--yes`. |
 | `… may answer with data about an identifiable person` | The endpoint is not in this environment's declared-clean set — the ordinary case, not a finding. Decide before adding `--personal-data`; if the response would describe a person, rule 2 applies and the user asks. See [`--personal-data`](#--personal-data-the-gate-and-how-to-read-it). |
