@@ -19,6 +19,9 @@ authenticated with the current user's **personal access token**. It moves care
 pathways, flows and surveys between environments as a single JSON package, and reaches
 any other endpoint through `tabia api`.
 
+If it is not on this machine yet, **installing it is your first step** rather than
+something to hand back to the user — see [Install and upgrade](#install-and-upgrade).
+
 ## Personal data
 
 **The user may read personal data through this CLI. You may not.**
@@ -154,19 +157,32 @@ network hop.
 curl -fsSL https://static.tabia.health/install.sh | sh
 ```
 
-That is the front door; it checks `curl` is present and that Python is 3.9+, then asks
-where to install and defaults to `~/.local/bin/tabia`. A missing OS keyring only *warns*
-— the refusal comes later, at first use. Re-running it upgrades.
+`tabia: command not found` is a step, not a finding: **install it and carry on.** Unlike
+`auth login`, this one is yours to run — with no terminal to prompt at it takes the
+defaults instead of blocking, and `--dir <path>` or `-y` make that explicit. (That `-y` is
+the installer's own, and has nothing to do with the CLI's `--yes` forbidden under
+[Writes](#writes-the-rules).)
+
+It checks `curl` is present and that Python is 3.9+, then asks where to install and
+defaults to `~/.local/bin/tabia`. A missing OS keyring only *warns* — the refusal comes
+later, at first use. Re-running it upgrades.
+
+**If you are not allowed to run it, hand it over.** A permission mode that refuses the
+command, or a user who declines it, has settled the question — say so plainly, give them
+the line above for their own terminal, and pick up once they say it is in. That is a
+refusal to respect, not an obstacle to route around with another download path.
+
+**A new machine needs two things, in that order**: the CLI, which is yours to install, and
+a profile, which is not. So `command not found` → install → `tabia auth list` → if that
+comes back empty, hand over the `auth login` line and let them run it, since
+[you cannot](#you-cannot-run-auth-login-yourself). Until a profile exists you cannot even
+name the organizations the user can reach — that list comes from their token, so ask them
+rather than guessing.
 
 **Nothing about GitHub is needed to install.** The CLI is downloaded straight from
 `static.tabia.health`, which carries whatever the source repository last published; that
 repository stays private, but no account, sign-in or `gh` stands between a person and the
 installer. What they still need from Tabia is a token in the environment itself.
-
-Unlike `auth login`, **the installer you can run**: with no terminal to prompt at it takes
-the defaults instead of blocking, and `--dir <path>` or `-y` make that explicit. (That
-`-y` is the installer's own, and has nothing to do with the CLI's `--yes` forbidden under
-[Writes](#writes-the-rules).)
 
 **`tabia --version` cannot tell you whether a copy is current** — the version string has
 not moved since the first release, so an installed copy from before a change still answers
@@ -378,6 +394,7 @@ for the missing terminal: it puts the irreversible step with the person accounta
 
 | Symptom | What it means |
 |---|---|
+| `tabia: command not found` | The CLI is not installed here. Install it yourself — [Install and upgrade](#install-and-upgrade) — and only hand the command over if you are not allowed to run it. |
 | `no profiles yet` | Nothing configured here. Give the user the `auth login` line to run themselves — you can neither run it nor mint the token for them. |
 | `no profile selected` | Profiles exist but none is active. Name one with `--profile`, or `tabia auth use <name>`; the CLI refuses rather than guessing. |
 | The "Create token" button is disabled | They hold no grantable role in that organization; global roles do not count. See [When the "Create token" button is disabled](#when-the-create-token-button-is-disabled). |
