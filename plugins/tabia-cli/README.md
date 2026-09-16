@@ -33,13 +33,10 @@ and expensive when you do:
 
 ## What it expects of you
 
-- **Access to the CLI.** Its source repository is private, so the installer checks that the
-  GitHub account you are signed in to `gh` with can read it. If you are a customer or partner and
-  that check fails, ask your Tabia contact for access.
 - **A personal access token** in the environment you are working with, minted in the web app
   under **Settings → Personal access tokens**. `OPERATIONAL_MANAGER` covers the whole
   pathway/flow/survey workflow.
-- **Python 3.9+**, `gh`, and an OS keyring (Keychain on macOS, libsecret on Linux).
+- **Python 3.9+**, `curl`, and an OS keyring (Keychain on macOS, libsecret on Linux).
 
 ## Install the CLI
 

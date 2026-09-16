@@ -7,8 +7,8 @@ experienced person would.
 
 This repository is **public**, and the plugins in it are meant for Tabia teams, customers and
 partners alike. Some of what they describe still needs access you may not have — a personal
-access token in the environment you are working with, and for `tabia-cli`, access to the CLI
-itself. Each plugin's README says what it expects.
+access token in the environment you are working with. Each plugin's README says what it
+expects.
 
 ## Install
 
