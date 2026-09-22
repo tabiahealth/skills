@@ -307,6 +307,15 @@ It goes before or after the subcommand, like `--profile`, and applies to every c
 The version prefix is never dropped, so all CLI traffic stays one group that can still be
 split by caller: `--user-agent claude-code` sends `tabia-cli/0.1.0 (claude-code)`.
 
+**A copy that rejects the flag predates it — re-run the installer rather than dropping
+it.** Passing it after the subcommand fails legibly (`error: unrecognized arguments:
+--user-agent claude-code`); passing it before, in the form above, does not — the parser
+blames the positional instead and says `error: argument command: invalid choice:
+'claude-code'`, which reads like a mistyped subcommand and is nothing of the kind. Both
+exit 2, and neither means the label was wrong. `tabia --version` answers `0.1.0` either
+way, as [ever](#install-and-upgrade); `tabia --help` lists the global options, so it
+settles this one directly.
+
 **A line you hand the user to run in their own terminal does not get the flag.** It says
 who ran the command, so putting it on something a person will paste makes the record
 wrong. That includes `auth login`, which you cannot run anyway.
