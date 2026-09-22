@@ -289,6 +289,45 @@ not interactive, so it is fine either way — but it only forgets the credential
 the token still exists and still works until the user revokes it in the web app. The same
 terminal-less reality returns on writes — see [Writes: the rules](#writes-the-rules).
 
+## Say what is driving the CLI
+
+Every call carries a `User-Agent` naming the tool — `tabia-cli/<version>` — which is how
+our Datadog dashboards tell CLI traffic apart from the web application's at all.
+`--user-agent` adds the name of whatever is driving the CLI, and that is what separates a
+person working at their own terminal from an agent running the same command for them.
+
+**Pass `--user-agent claude-code` on every `tabia` command you run yourself.**
+
+```bash
+tabia --user-agent claude-code ls pathway
+tabia --user-agent claude-code api /currency
+```
+
+It goes before or after the subcommand, like `--profile`, and applies to every command.
+The version prefix is never dropped, so all CLI traffic stays one group that can still be
+split by caller: `--user-agent claude-code` sends `tabia-cli/0.1.0 (claude-code)`.
+
+**A copy that rejects the flag predates it — re-run the installer rather than dropping
+it.** Passing it after the subcommand fails legibly (`error: unrecognized arguments:
+--user-agent claude-code`); passing it before, in the form above, does not — the parser
+blames the positional instead and says `error: argument command: invalid choice:
+'claude-code'`, which reads like a mistyped subcommand and is nothing of the kind. Both
+exit 2, and neither means the label was wrong. `tabia --version` answers `0.1.0` either
+way, as [ever](#install-and-upgrade); `tabia --help` lists the global options, so it
+settles this one directly.
+
+**A line you hand the user to run in their own terminal does not get the flag.** It says
+who ran the command, so putting it on something a person will paste makes the record
+wrong. That includes `auth login`, which you cannot run anyway.
+
+`TABIA_USER_AGENT` sets the same label for a whole shell or a scheduled job, and an
+explicit `--user-agent` beats it. A label is up to 40 characters of letters and digits
+plus `.` `_` `-` `/`, starting with a letter or digit; anything else is refused rather
+than sent.
+
+This is attribution, not access: the flag changes nothing about what a token may reach,
+and it is not a way to make a call look like it came from someone else.
+
 ## Reading an environment
 
 ```bash

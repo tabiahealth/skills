@@ -38,7 +38,7 @@ Delete it when the job is done. Keeping a package is the user's decision, not a 
 ## Never guess the format — ask for it
 
 ```bash
-tabia api solution-package/schema > "$work/schema.json"
+tabia --user-agent claude-code api solution-package/schema > "$work/schema.json"
 ```
 
 `tabia api` takes a path under `/apiv1`, so that is a `GET` of
@@ -65,7 +65,7 @@ Reading the schema tells you what is allowed. An export tells you what a working
 looks like, which is faster and gets the conventions right for free:
 
 ```bash
-tabia export --pathway 42 -o "$work/scaffold.json"
+tabia --user-agent claude-code export --pathway 42 -o "$work/scaffold.json"
 ```
 
 Edit that. For a solution with no ancestor, export the closest thing that exists and
@@ -163,10 +163,10 @@ A package is configuration. If you think you are looking at a person in one, sto
 Once the file is written, the sequence is the `tabia-cli` skill's, unchanged:
 
 ```bash
-tabia plan "$work/solution.json"                                     # offline: creates vs needs
-tabia resolve "$work/solution.json" --profile staging/acme -o "$work/map.json"
-tabia import "$work/solution.json" --map "$work/map.json" --profile staging/acme
-tabia import "$work/solution.json" --map "$work/map.json" --profile staging/acme --write
+tabia --user-agent claude-code plan "$work/solution.json"            # offline: creates vs needs
+tabia --user-agent claude-code resolve "$work/solution.json" --profile staging/acme -o "$work/map.json"
+tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme
+tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme --write
 ```
 
 `plan` is offline and is the cheapest check on a hand-written file: it reads the items,
