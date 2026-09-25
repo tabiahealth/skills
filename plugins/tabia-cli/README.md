@@ -6,9 +6,9 @@ particular organization — from the command line with the `tabia` CLI.
 `tabia` is a standalone Python CLI that talks to the Tabia platform over HTTP, authenticated
 with your personal access token. It can:
 
-- **list and read** — `tabia ls pathway|flow|survey`, and `tabia api` as an escape hatch to any
+- **list and read** — `tabia ls pathway|flow|survey|funnel`, and `tabia api` as an escape hatch to any
   `/apiv1` endpoint;
-- **move a solution between environments** — export a care pathway with its flows and surveys as
+- **move a solution between environments** — export a care pathway with its flows, surveys and funnels as
   one JSON package, `plan` it offline, `resolve` its external references against the target
   organization, then `import` it (dry run first, always);
 - **manage profiles and tokens** — one profile per environment/organization pair, tokens held in

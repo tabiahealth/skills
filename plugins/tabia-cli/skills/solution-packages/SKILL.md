@@ -107,8 +107,9 @@ importing points each placeholder at something real. `tabia plan` lists them off
 
 A **care pathway** is never dragged in by being referenced — one pathway mentioning
 another leaves a placeholder, because packaging it would drag in a second care line
-nobody asked for. Flows, surveys, message templates and channels are the opposite: naming
-one anywhere pulls it into the file.
+nobody asked for. Flows, surveys, message templates, channels and funnels are the opposite: naming one
+anywhere pulls it into the file. A funnel is pulled in only if it is published; an
+unpublished one stays a placeholder.
 
 The practical consequence when authoring: a flow your pathway starts belongs **in** the
 file as an item; a program, a team or a medical code belongs as a placeholder.
@@ -126,6 +127,10 @@ counts archived ones. Importing a file whose flow name is already taken fails th
 package. The import can rename an item on the way in, and the interface asks before
 submitting. When authoring for an organization that already has content, choose names that
 will not collide.
+
+A funnel's name is unique per organization too, case-insensitively, and nothing renames a
+funnel on import, so a taken funnel name fails the whole package with no way round it but
+another name in the file.
 
 Nothing constrains a pathway's or a survey's name.
 
@@ -145,6 +150,7 @@ Importing is not publishing. Say this to the user rather than letting them disco
 | survey | live only if it was live where it came from |
 | message template | **pending approval** by the messaging provider; a flow that sends it fails until approved |
 | message channel | **without its integration**, so it carries no credential and sends nothing until one is attached |
+| funnel | **an unpublished draft** — publish it before a flow can start it or conclude a step of it |
 
 The message template's integration is asked for at import, because it decides what kind of
 template is created. The channel's is not asked for and is left empty — an organization

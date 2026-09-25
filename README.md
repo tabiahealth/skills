@@ -42,7 +42,7 @@ project's `.claude/settings.json`:
 
 | Plugin | Description |
 |---|---|
-| [`tabia-cli`](plugins/tabia-cli) | Reaching a deployed Tabia environment from the command line — profiles and tokens, reading with `tabia ls` / `tabia api`, and moving pathways, flows and surveys between environments with export/plan/resolve/import. |
+| [`tabia-cli`](plugins/tabia-cli) | Reaching a deployed Tabia environment from the command line — profiles and tokens, reading with `tabia ls` / `tabia api`, and moving pathways, flows, surveys and funnels between environments with export/plan/resolve/import. |
 
 ## A note on what these skills enforce
 
