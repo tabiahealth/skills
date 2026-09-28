@@ -23,6 +23,10 @@ and expensive when you do:
   Claude may not read it back. The skill routes such output to a file you own, or hands you the
   command for your own terminal, and explains the `--personal-data` gate — what a refusal does
   and does not mean, and why being asked is the ordinary case rather than a finding.
+- **The API comes from the environment.** Each environment serves an OpenAPI document of its own
+  API. The skill fetches it once, queries it with `jq` for the path, parameters and body it
+  needs, and reads the request schema before any write through `tabia api`. It does not guess
+  endpoints from memory.
 - **Production writes end with a person.** Nothing is sent without `--write`; a write to a
   `production/` profile asks a human to type the profile name, and the skill treats that prompt
   as the authorization rather than an obstacle — it prepares and dry-runs the whole transfer, then

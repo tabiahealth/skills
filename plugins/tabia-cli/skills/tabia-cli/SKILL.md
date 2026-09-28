@@ -4,12 +4,14 @@ description: >
   How to reach a Tabia environment (staging, production, a particular
   organization) from the command line with the `tabia` CLI — list, export, plan,
   resolve and import care pathways, flows and surveys, and call any `/apiv1`
-  endpoint with `tabia api`. Use this skill when the user asks to inspect or
-  change something in a deployed Tabia environment, to move a pathway, flow or
-  survey between environments or organizations, or mentions `tabia`,
-  `tabia auth`, profiles, personal access tokens (PAT), or solution packages.
-  Personal data is the user's to read, never Claude's: never use it to bring
-  personal data into the conversation.
+  endpoint with `tabia api`, learning its paths and payloads from the
+  environment's own OpenAPI document. Use this skill when the user asks to
+  inspect or change something in a deployed Tabia environment, to move a
+  pathway, flow or survey between environments or organizations, or mentions
+  `tabia`, `tabia auth`, profiles, personal access tokens (PAT), solution
+  packages, or asks which endpoint does something or what it expects. Personal
+  data is the user's to read, never Claude's: never use it to bring personal
+  data into the conversation.
 ---
 
 # Reaching Tabia environments with the `tabia` CLI
@@ -100,9 +102,10 @@ before you re-run rather than the CLI's to make for you:
   above — report the refusal, say what the call would return, and let the user ask before
   you re-run with the flag, into a file rather than into view.
 - **Plainly configuration or reference data that is simply not annotated?** Pass the flag,
-  saying in one line why you are satisfied it carries nobody. An endpoint that genuinely
-  cannot return personal data is missing its declaration, which is worth reporting to
-  Tabia.
+  saying in one line why you are satisfied it carries nobody. The response schema in the
+  [environment's OpenAPI document](#finding-the-endpoint-ask-the-environment-not-your-memory)
+  is the quickest way to be satisfied. An endpoint that genuinely cannot return personal
+  data is missing its declaration, which is worth reporting to Tabia.
 - **Everything refused?** Suspect the list, not the endpoint, and read the printed reason.
 
 The cheapest double-check is to look before running. This call is **exempt from the gate**
@@ -337,11 +340,12 @@ tabia api /me --personal-data           # not declared — most endpoints are no
 tabia api '/pathway?size=5' --personal-data -q '.content[].name'
 ```
 
-`tabia api` is the escape hatch for everything outside pathways, flows and surveys. The
-path is under `/apiv1`, the response body goes to stdout (pretty JSON) and everything
-else to stderr, so `| jq` works unflagged. `--paginate` walks this API's `page`/`last`
-paging and merges the `content` arrays, on a `GET` only. A failing call prints the
-server's own response and exits non-zero.
+`tabia api` is the escape hatch for everything outside pathways, flows and surveys, and
+[the environment's OpenAPI document](#finding-the-endpoint-ask-the-environment-not-your-memory)
+is where its paths and bodies come from. The path is under `/apiv1`, the response body
+goes to stdout (pretty JSON) and everything else to stderr, so `| jq` works unflagged.
+`--paginate` walks this API's `page`/`last` paging and merges the `content` arrays, on a
+`GET` only. A failing call prints the server's own response and exits non-zero.
 
 `ls` is ungated and always fine — reach for it before `api` when it can answer the
 question. Whatever `api` touches that the environment has not declared clean needs
@@ -349,6 +353,66 @@ question. Whatever `api` touches that the environment has not declared clean nee
 [`--personal-data`](#--personal-data-the-gate-and-how-to-read-it) before adding it. Prefer
 narrow reads over dumping whole collections either way — a deployed environment is not a
 scratchpad.
+
+### Finding the endpoint: ask the environment, not your memory
+
+**Every environment describes its own API** at `GET /apiv1/openapi.json`, an OpenAPI
+document generated from the code that environment runs. Any signed-in user can read it,
+through a token too, and it is declared free of personal data, so it needs no
+`--personal-data`. When the task is something `ls`, `export` and `import` do not cover,
+this document is where the path, the method, the parameters and the body come from. Guessed
+paths and payloads recalled from memory are not a source. Neither is a source checkout,
+which may not match the version that environment is running.
+
+It is about a megabyte, over a thousand paths. **Fetch it once into the work directory and
+query the file**, rather than printing it or fetching it again for each question:
+
+```bash
+work=${work:-$(mktemp -d)}
+spec="$work/openapi.json"
+tabia --user-agent claude-code api /openapi.json > "$spec"
+
+# which operations mention pathways — method, path, summary
+jq -r '.paths | to_entries[] | .key as $path | .value | to_entries[]
+       | "\(.key | ascii_upcase) \($path)  \(.value.summary // "")"' "$spec" | grep -i pathway
+
+jq '.paths["/pathway"] | keys' "$spec"                                   # its methods
+jq '.paths["/pathway"].get.parameters | map(.name)' "$spec"              # page/size → --paginate applies
+jq '.paths["/pathway"].post.requestBody.content["application/json"].schema' "$spec"
+jq '.components.schemas["<Name>"]' "$spec"                               # follow a $ref by hand
+```
+
+Its paths are relative to `/apiv1` (`servers` says so), which is the form `tabia api`
+takes, so a path copied out of the document works as it is. A `$ref` reads
+`#/components/schemas/<Name>` and resolves inside the same file. The file describes the API,
+not anyone's data, and it goes in the same throwaway directory as everything else.
+
+What the document is, and what it is not:
+
+- **It is what this environment accepts.** Read it from the environment you are about to
+  call. Staging and production can run different versions, so a document fetched from one
+  says nothing reliable about the other.
+- **Before a non-`GET` `tabia api`, read the operation's request body schema.** `import`
+  has a dry run and `tabia api` does not: a `POST`, `PUT` or `DELETE` is sent the moment
+  it runs. So checking the body against the schema is the only check before the call
+  lands, and the confirmation under [Writes](#writes-the-rules) still applies after it.
+- **It is not a permission list.** It lists operations whatever the token's roles, so a
+  `403` on an operation it lists still means [roles too narrow](#troubleshooting).
+- **It is not the personal-data list either.** `/no-personal-data-endpoints` alone decides
+  the gate. The response schema is still the quickest evidence for the decision
+  [`--personal-data`](#--personal-data-the-gate-and-how-to-read-it) asks of you. A response
+  with a patient's name, a birth date, a contact or a `createdBy` user describes a person.
+  A response that is only codes, labels and settings supports passing the flag, but proves
+  nothing on its own.
+- **Absent does not mean nonexistent.** The document leaves out global-admin and internal
+  operations, which a token could not call anyway, and resources built for one particular
+  customer. If the user names an endpoint that is not listed, it may still exist in their
+  organization. Ask them rather than concluding it does not.
+- **Name operations by method and path, never by `operationId`.** The ids are numbered
+  automatically (`update_32`), and the numbers shift between releases.
+
+If the call answers `404`, the environment predates the document. Say so, and fall back to
+`ls` and the paths the user already knows.
 
 ## Moving a solution between environments
 
@@ -451,6 +515,7 @@ for the missing terminal: it puts the irreversible step with the person accounta
 | `403` from `auth status` | Unknown, tampered, revoked, expired or demoted token — the auth filter answers the same for all five, deliberately, so the status call cannot tell you which. Check in the web app whether the token is still listed and whether its owner still holds the local role; the fix either way is a fresh token the user mints and logs in with. |
 | `403` on a specific endpoint, e.g. `ls pathway` | Usually not the token being rejected but its **roles being too narrow** — a `SPECIALIST` token 403s on `/pathway`, `/chatflows` and `/survey` alike. `auth status` shows what it carries; the fix is a new token with `OPERATIONAL_MANAGER`, since a token's roles cannot be edited. |
 | `auth list` shows an error in a profile's NOTE column | That token is dead; the others are fine. `production` on its own is not an error — a production profile always carries it. |
+| `404` from `tabia api /openapi.json` | The environment predates its published OpenAPI document. Everything else still works. Fall back to `ls` and the paths the user knows, and do not guess the rest. |
 | `404 on POST /solution-package/export` (or the same on import) | The environment predates the solution-package endpoints — the CLI says so by name. `auth`, `ls`, `api` and the offline `plan` still work; the transfer does not. |
 | A subcommand or flag is not recognised | Likely an old installed copy — re-run the installer (see above); do not trust `--version`. |
 | No keyring (headless box, container) | The CLI refuses rather than writing the token in the clear. `TABIA_ALLOW_PLAINTEXT_TOKENS=1` opts into a `600` file — only suggest it with the trade-off stated. |
