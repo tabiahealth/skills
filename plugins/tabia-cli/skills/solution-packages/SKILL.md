@@ -123,14 +123,13 @@ before relinking anything. Do not try to sort the items.
 ### A flow's name is unique per organization
 
 Two flows cannot share a name in one organization, and the check is case-insensitive and
-counts archived ones. Importing a file whose flow name is already taken fails the **whole**
-package. The import can rename an item on the way in, and the interface asks before
-submitting. When authoring for an organization that already has content, choose names that
-will not collide.
-
-A funnel's name is unique per organization too, case-insensitively, and nothing renames a
-funnel on import, so a taken funnel name fails the whole package with no way round it but
-another name in the file.
+counts archived ones. A funnel's name is unique per organization too, on the same terms.
+Importing a file whose flow or funnel name is already taken fails the **whole** package, so
+both the wizard and the CLI check the names first and offer, per item, to create it under
+another name or to point the package at the one the organization already has (nothing is
+created under it, and the rest of the package is relinked to it). A name held by an archived
+item can only be renamed. When authoring for an organization that already has content,
+choose names that will not collide, so nobody has to make that choice on import.
 
 Nothing constrains a pathway's or a survey's name.
 

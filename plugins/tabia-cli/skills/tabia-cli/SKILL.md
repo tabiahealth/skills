@@ -382,6 +382,18 @@ a package is the user's decision, not a default.
   **AMBIGUOUS**, **NOT FOUND**, **UNSUPPORTED** and **FORBIDDEN** are for a human to
   fill in, in the map file. Do not invent an id to make it pass.
 - `import` refuses to send while any external reference is unmapped, and names each one.
+- `import` also asks the target which names it already holds, before anything is sent. A
+  flow or a funnel is unique by name inside an organization, so the dry run lists each clash
+  with the id of what holds the name, exits non-zero while any stands, and `--write` refuses.
+  Per item, either create it under another name with `--rename <ref>="<new name>"`, or point
+  the package at the one already there by adding a resolution for the item's own ref to the
+  map file (`{"Flow": {"<ref>": {"reference": <existing id>, "display": "..."}}}`): nothing
+  is created under it and the rest of the package is relinked to it. The dry run lists such
+  items under "pointed at what the organization already has". A name held by an archived item
+  cannot be pointed at, so that one has to be renamed. **The choice is the user's**: report
+  what clashes and ask, never pick "point at the existing one" on your own, since a funnel
+  with the same name and different steps fails when a patient reaches it rather than here.
+  An environment that predates the check says so, and a taken name then fails the write itself.
 
 Cross-profile is the normal case: the active profile is the source, the target is named
 explicitly on `resolve` and `import`. Check you have them the right way round — an
@@ -404,9 +416,9 @@ Funnels come with two limits worth saying before the write, not after it fails:
   flow that names an unpublished one keeps it as a reference to resolve. A funnel that does
   travel arrives as an **unpublished draft**, and the flow cannot use it until it is
   published.
-- A funnel whose name the target already uses **fails the whole import**
-  (`funnel-name-already-exists`). Mapping it to the existing funnel does not help, because an
-  item the package carries always wins over the map, and nothing renames a funnel on import.
+- A funnel whose name the target already uses is **refused before the write**, and the dry
+  run says which. Rename it or point the package at the existing one, as described above,
+  and let the user make that call.
 
 To write a package rather than move one, see the `solution-packages` skill.
 
