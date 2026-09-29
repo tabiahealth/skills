@@ -136,7 +136,7 @@ Importing a file whose flow or funnel name is already taken fails the **whole** 
 both the wizard and the CLI check the names first and offer, per item, to create it under
 another name or to point the package at the one the organization already has (nothing is
 created under it, and the rest of the package is relinked to it). A name held by an archived
-item can only be renamed. When authoring for an organization that already has content,
+item or a never-published funnel can only be renamed. When authoring for an organization that already has content,
 choose names that will not collide, so nobody has to make that choice on import.
 
 Nothing constrains a pathway's or a survey's name.

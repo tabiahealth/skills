@@ -453,8 +453,9 @@ a package is the user's decision, not a default.
   the package at the one already there by adding a resolution for the item's own ref to the
   map file (`{"Flow": {"<ref>": {"reference": <existing id>, "display": "..."}}}`): nothing
   is created under it and the rest of the package is relinked to it. The dry run lists such
-  items under "pointed at what the organization already has". A name held by an archived item
-  cannot be pointed at, so that one has to be renamed. **The choice is the user's**: report
+  items under "pointed at what the organization already has", and the write's summary lists
+  them as reused. A name held by something nothing runs on, an archived item or a
+  never-published funnel, cannot be pointed at, so that one has to be renamed. **The choice is the user's**: report
   what clashes and ask, never pick "point at the existing one" on your own, since a funnel
   with the same name and different steps fails when a patient reaches it rather than here.
   An environment that predates the check says so, and a taken name then fails the write itself.
