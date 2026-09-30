@@ -173,13 +173,63 @@ Once the file is written, the sequence is the `tabia-cli` skill's, unchanged:
 ```bash
 tabia --user-agent claude-code plan "$work/solution.json"            # offline: creates vs needs
 tabia --user-agent claude-code resolve "$work/solution.json" --profile staging/acme -o "$work/map.json"
-tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme
+tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme          # dry run: validated, not written
 tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme --write
 ```
 
 `plan` is offline and is the cheapest check on a hand-written file: it reads the items,
 subtracts the refs the file satisfies itself, and lists what is left. Run it after every
 edit.
+
+### The dry run asks the target
+
+`plan` only knows the file. The dry run, `import` without `--write`, is the check that asks
+the environment: it sends the package and the map to `POST /solution-package/validate`,
+which runs the same validation the import runs before writing, writes nothing, and answers
+with **every** problem it found rather than the first. It exits non-zero while the package
+is not importable.
+
+Because the import refuses on those same checks, a package the dry run accepts will not be
+refused for anything the validator looks at. That is a narrower promise than it sounds. The
+validator does not check that an id in the map exists in the organization (the template's
+integration aside), and it cannot see what only the write finds out, such as a database
+constraint. A clean report is necessary, not sufficient, which is why guardrail 1 still
+asks for a non-production import and a look at the result.
+
+The report is `importable` plus a list of issues. The fields that matter for fixing a file:
+
+- `severity`: `ERROR` blocks the import, `WARNING` does not.
+- `code`: a stable name for the problem, and the one the import refuses with. Reason about
+  the code rather than the wording, which can change.
+- `ref` and `index`: the item, by the ref you gave it and by its position in the file. The
+  position is how you find it when the ref itself is the problem, missing or shared.
+- `path`: a JSON pointer into **that item's payload**, not into the whole file. Open the
+  item first, then follow the pointer inside its payload.
+- `message`: English, for a person. It says what is wrong; `details` carries the values
+  involved, such as the name that is taken.
+
+So the loop is: fix the file at each `path`, run `plan` again, and re-run the dry run until
+`importable` is true. Fix everything one report lists before re-running; it lists them all
+so that one round can cover them. Do not edit a placeholder into an invented id to make an
+error go away; an unanswered placeholder is for the map, and the map is for a person.
+
+**A `WARNING` is not a blocker, and that is why it has to be said out loud.** A
+`flow-import-unknown-action` means a flow uses an action this environment does not know:
+the flow imports, and that step will not run. In automation that speaks to patients, a step
+that silently does nothing is a behaviour change nobody chose. Name every warning to the
+user with the item it points at, and let them decide whether that is acceptable.
+
+When `importable` is true, show the user the **final report, warnings included**, before
+proposing `--write`. If a write is refused anyway, the refusal carries the first error's
+code and the whole report under `content.issues`; read it the same way.
+
+**On an environment that predates the endpoint (`404`)**, the CLI says so and falls back to
+the old dry run, which is local only: it prints the banner and the items, sends nothing,
+and proves little beyond the file being readable. Tell the user that in as many words. The
+server then sees the package for the first time on `--write`, which makes the non-production
+import the only real check. A dry run that prints neither a report nor that note comes from
+an installed copy that predates the change; the `tabia-cli` skill's install section covers
+it.
 
 ## Guardrails
 
@@ -189,8 +239,10 @@ exercised nowhere, and a care pathway drives automation that speaks to patients.
 
 1. **Import to a non-production environment first, and look at the result.** A solution
    that parses is not a solution that behaves.
-2. **The dry run is not optional.** Run `import` without `--write` and show the user what
-   it says before proposing the real one.
+2. **The dry run is not optional.** Run `import` without `--write`, fix what its report
+   lists until the package is importable, and show the user the final report, warnings
+   included, before proposing the real one. See
+   [The dry run asks the target](#the-dry-run-asks-the-target).
 3. **Confirm with the user before any write.** Approval for one is not approval for the
    next.
 4. **Never pass `--yes`.** It skips the production confirmation, which exists for this.
