@@ -10,7 +10,8 @@ with your personal access token. It can:
   `/apiv1` endpoint;
 - **move a solution between environments** — export a care pathway with its flows and surveys as
   one JSON package, `plan` it offline, `resolve` its external references against the target
-  organization, then `import` it (dry run first, always);
+  organization, then `import` it (dry run first, always: the target validates the package
+  and reports every problem, without writing anything);
 - **manage profiles and tokens** — one profile per environment/organization pair, tokens held in
   the OS keyring.
 
@@ -27,7 +28,8 @@ and expensive when you do:
   API. The skill fetches it once, queries it with `jq` for the path, parameters and body it
   needs, and reads the request schema before any write through `tabia api`. It does not guess
   endpoints from memory.
-- **Production writes end with a person.** Nothing is sent without `--write`; a write to a
+- **Production writes end with a person.** Nothing is written without `--write` (the dry run
+  sends only a read-only validation request, and the skill fixes what it reports); a write to a
   `production/` profile asks a human to type the profile name, and the skill treats that prompt
   as the authorization rather than an obstacle — it prepares and dry-runs the whole transfer, then
   hands over one command for you to run.
@@ -49,7 +51,9 @@ curl -fsSL https://static.tabia.health/install.sh | sh
 ```
 
 Re-running it upgrades. `tabia --version` does not tell you whether your copy is current — ask
-for the subcommand instead, e.g. `tabia api --help`.
+for the subcommand instead, e.g. `tabia api --help`. A dry run `import` that prints no
+validation report, and no note that the environment cannot validate, is the usual sign of a
+stale copy.
 
 ## Use it
 

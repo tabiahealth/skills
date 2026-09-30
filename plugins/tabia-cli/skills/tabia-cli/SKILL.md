@@ -201,6 +201,20 @@ not moved since the first release, so an installed copy from before a change sti
 `tabia api --help`. If it is missing, re-run the installer instead of concluding the
 feature does not exist.
 
+A stale copy does not always fail. Two symptoms mean it is out of date even though it runs:
+
+- **A message template or channel the package carries is listed twice**, under "will be
+  created" and again under "needs resolving", and `import` refuses to send it as an
+  unmapped reference. The copy predates the CLI knowing those kinds.
+- **The dry run prints no validation report** on an environment that has the endpoint:
+  only the banner and the item list, and no note that the environment cannot validate. The
+  copy predates the dry run that asks the server, so a package it waves through has been
+  checked by nobody. Whether the environment has the endpoint is one lookup in
+  [its OpenAPI document](#finding-the-endpoint-ask-the-environment-not-your-memory):
+  `jq '.paths | has("/solution-package/validate")' "$spec"`.
+
+The remedy for both is to re-run the installer, not to work around the output.
+
 ## Profiles and authentication
 
 A token is scoped to exactly one organization and cannot switch. One token, one
@@ -427,7 +441,7 @@ tabia ls pathway --search diabetes                                  # 1. find it
 tabia export --pathway 42 -o "$work/diabetes.json"                  # 2. flows + surveys come along
 tabia plan "$work/diabetes.json"                                    # 3. offline: creates vs needs
 tabia resolve "$work/diabetes.json" --profile production/acme -o "$work/map.json"
-tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme
+tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme          # dry run: validated, not written
 tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme --write
 ```
 
@@ -446,6 +460,18 @@ a package is the user's decision, not a default.
   **AMBIGUOUS**, **NOT FOUND**, **UNSUPPORTED** and **FORBIDDEN** are for a human to
   fill in, in the map file. Do not invent an id to make it pass.
 - `import` refuses to send while any external reference is unmapped, and names each one.
+- `import` without `--write` is the dry run, and it asks the target. It sends the package
+  and the map to `POST /solution-package/validate`, which runs the checks the import runs
+  before writing, writes nothing, and reports every problem at once: each with a `severity`,
+  a `code`, the item's `ref` and a `path` into its payload. It exits non-zero while the
+  package is not importable. A `WARNING` does not block the import but says something will
+  not work, such as a flow step whose action the target does not know, so report every
+  one. A clean report is not a guarantee: it does not check that the ids in the map exist,
+  and it cannot see what only the write finds out. The `solution-packages` skill covers
+  reading the report to fix a file.
+- On an environment without that endpoint (`404`), the CLI says so and falls back to a
+  dry run that is local only: banner and items, nothing sent, little proven. Say that to
+  the user; `--write` is then the first time the server sees the package.
 
 Cross-profile is the normal case: the active profile is the source, the target is named
 explicitly on `resolve` and `import`. Check you have them the right way round — an
@@ -465,8 +491,10 @@ To write a package rather than move one, see the `solution-packages` skill.
 
 ## Writes: the rules
 
-1. **Nothing is sent without `--write`.** Always run the dry run first and show the user
-   what it says.
+1. **Nothing is written without `--write`.** The dry run is not silent: it sends a
+   read-only validation request to the target, so it needs the right profile and a working
+   token like any other call. Always run it first and show the user what it says,
+   warnings included.
 2. **Confirm with the user before any write** — `import --write` or a non-`GET`
    `tabia api`. Approval for one write is not approval for the next.
 3. **Never pass `--yes`.** It skips the production confirmation, which is exactly the
@@ -494,8 +522,9 @@ for the missing terminal: it puts the irreversible step with the person accounta
 
 1. **Prepare and verify everything** — `export`, `plan`, `resolve` and the dry-run
    `import`. All of that is yours to run, and it is where the real work is.
-2. **Show the dry run** and the org/host/acting-user banner it printed, so the user decides
-   with the facts in front of them.
+2. **Show the dry run**: the validation report, warnings included, and the
+   org/host/acting-user banner it printed, so the user decides with the facts in front of
+   them. Hand nothing over while the report says the package is not importable.
 3. **Hand over one copy-pasteable command** for their own terminal — the same one, with
    `--write` and no `--yes`. Say that the CLI will ask them to type the profile name.
 4. **Verify afterwards** with read-only commands and report what actually landed rather
@@ -517,6 +546,8 @@ for the missing terminal: it puts the irreversible step with the person accounta
 | `auth list` shows an error in a profile's NOTE column | That token is dead; the others are fine. `production` on its own is not an error — a production profile always carries it. |
 | `404` from `tabia api /openapi.json` | The environment predates its published OpenAPI document. Everything else still works. Fall back to `ls` and the paths the user knows, and do not guess the rest. |
 | `404 on POST /solution-package/export` (or the same on import) | The environment predates the solution-package endpoints — the CLI says so by name. `auth`, `ls`, `api` and the offline `plan` still work; the transfer does not. |
+| The dry run notes that the environment cannot validate | The target predates `/solution-package/validate`, and the dry run fell back to local only: nothing was sent and little is proven. Say so; `--write` is the first time the server sees the package. |
+| The dry run prints no validation report and no such note, or `plan` lists a template or channel both as created and as needing resolving | A stale installed copy. Re-run the installer; see [Install and upgrade](#install-and-upgrade). |
 | A subcommand or flag is not recognised | Likely an old installed copy — re-run the installer (see above); do not trust `--version`. |
 | No keyring (headless box, container) | The CLI refuses rather than writing the token in the clear. `TABIA_ALLOW_PLAINTEXT_TOKENS=1` opts into a `600` file — only suggest it with the trade-off stated. |
 
