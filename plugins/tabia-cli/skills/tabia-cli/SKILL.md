@@ -483,7 +483,9 @@ a package is the user's decision, not a default.
   them as reused. A name held by something nothing runs on — an archived or
   suspended item, one never published, or a funnel left with no live step — cannot be pointed
   at, so that one has to be renamed. An item pointed at the existing one is not created, so
-  what only it refers to needs no mapping. **The choice is the user's**: report
+  what only it refers to needs no mapping, but a survey, template or channel it dragged into
+  the file is still created as a copy; say so when the user weighs the two. **The choice is the
+  user's**: report
   what clashes and ask, never pick "point at the existing one" on your own, since a funnel
   with the same name and different steps fails when a patient reaches it rather than here.
   An environment that predates the check says so, and a taken name then fails the write itself.

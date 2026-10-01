@@ -139,7 +139,8 @@ another name or to point the package at the one the organization already has (no
 created under it, and the rest of the package is relinked to it). A name held by something
 nothing runs on — an archived or suspended item, one never published, or a funnel left with no
 live step — can only be renamed. An item pointed at the existing one is not created, so what
-only it refers to needs no mapping. When authoring for an organization that already has content,
+only it refers to needs no mapping, though a survey, template or channel it dragged into the file
+is still created as a copy. When authoring for an organization that already has content,
 choose names that will not collide, so nobody has to make that choice on import.
 
 Nothing constrains a pathway's or a survey's name.
