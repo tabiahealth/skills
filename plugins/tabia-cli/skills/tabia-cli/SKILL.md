@@ -3,22 +3,22 @@ name: tabia-cli
 description: >
   How to reach a Tabia environment (staging, production, a particular
   organization) from the command line with the `tabia` CLI — list, export, plan,
-  resolve and import care pathways, flows and surveys, and call any `/apiv1`
+  resolve and import care pathways, flows, surveys and funnels, and call any `/apiv1`
   endpoint with `tabia api`, learning its paths and payloads from the
   environment's own OpenAPI document. Use this skill when the user asks to
   inspect or change something in a deployed Tabia environment, to move a
-  pathway, flow or survey between environments or organizations, or mentions
-  `tabia`, `tabia auth`, profiles, personal access tokens (PAT), solution
-  packages, or asks which endpoint does something or what it expects. Personal
-  data is the user's to read, never Claude's: never use it to bring personal
-  data into the conversation.
+  pathway, flow, survey or funnel between environments or organizations, or
+  mentions `tabia`, `tabia auth`, profiles, personal access tokens (PAT),
+  solution packages, or asks which endpoint does something or what it expects.
+  Personal data is the user's to read, never Claude's: never use it to bring
+  personal data into the conversation.
 ---
 
 # Reaching Tabia environments with the `tabia` CLI
 
 `tabia` is a standalone Python CLI that talks to a deployed Tabia platform over HTTP,
 authenticated with the current user's **personal access token**. It moves care
-pathways, flows and surveys between environments as a single JSON package, and reaches
+pathways, flows, surveys and funnels between environments as a single JSON package, and reaches
 any other endpoint through `tabia api`.
 
 If it is not on this machine yet, **installing it is your first step** rather than
@@ -348,14 +348,14 @@ and it is not a way to make a call look like it came from someone else.
 ## Reading an environment
 
 ```bash
-tabia ls pathway --search diabetes      # also: flow, survey. --json for machine output
+tabia ls pathway --search diabetes      # also: flow, survey, funnel. --json for machine output
 tabia api /currency                     # declared free of personal data: goes through
 tabia api /me --personal-data           # not declared — most endpoints are not
 tabia api '/pathway?size=5' --personal-data -q '.content[].name'
 ```
 
-`tabia api` is the escape hatch for everything outside pathways, flows and surveys, and
-[the environment's OpenAPI document](#finding-the-endpoint-ask-the-environment-not-your-memory)
+`tabia api` is the escape hatch for everything outside pathways, flows, surveys and funnels,
+and [the environment's OpenAPI document](#finding-the-endpoint-ask-the-environment-not-your-memory)
 is where its paths and bodies come from. The path is under `/apiv1`, the response body
 goes to stdout (pretty JSON) and everything else to stderr, so `| jq` works unflagged.
 `--paginate` walks this API's `page`/`last` paging and merges the `content` arrays, on a
@@ -438,7 +438,7 @@ tabia auth use staging/acme
 work=$(mktemp -d)                                                   # 0. outside the repo
 
 tabia ls pathway --search diabetes                                  # 1. find it
-tabia export --pathway 42 -o "$work/diabetes.json"                  # 2. flows + surveys come along
+tabia export --pathway 42 -o "$work/diabetes.json"                  # 2. flows, surveys, funnels come along
 tabia plan "$work/diabetes.json"                                    # 3. offline: creates vs needs
 tabia resolve "$work/diabetes.json" --profile production/acme -o "$work/map.json"
 tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme          # dry run: validated, not written
@@ -460,8 +460,8 @@ a package is the user's decision, not a default.
   **AMBIGUOUS**, **NOT FOUND**, **UNSUPPORTED** and **FORBIDDEN** are for a human to
   fill in, in the map file. Do not invent an id to make it pass.
 - `import` refuses to send while any external reference is unmapped, and names each one.
-- `import` without `--write` is the dry run, and it asks the target. It sends the package
-  and the map to `POST /solution-package/validate`, which runs the checks the import runs
+- `import` without `--write` is the dry run, and it asks the target. It sends the package,
+  the map and the renames to `POST /solution-package/validate`, which runs the checks the import runs
   before writing, writes nothing, and reports every problem at once: each with a `severity`,
   a `code`, the item's `ref` and a `path` into its payload. It exits non-zero while the
   package is not importable. A `WARNING` does not block the import but says something will
@@ -472,6 +472,23 @@ a package is the user's decision, not a default.
 - On an environment without that endpoint (`404`), the CLI says so and falls back to a
   dry run that is local only: banner and items, nothing sent, little proven. Say that to
   the user; `--write` is then the first time the server sees the package.
+- `import` also asks the target which names it already holds, before anything is sent. A
+  flow or a funnel is unique by name inside an organization, so the dry run lists each clash
+  with the id of what holds the name, exits non-zero while any stands, and `--write` refuses.
+  Per item, either create it under another name with `--rename <ref>="<new name>"`, or point
+  the package at the one already there by adding a resolution for the item's own ref to the
+  map file (`{"Flow": {"<ref>": {"reference": <existing id>, "display": "..."}}}`): nothing
+  is created under it and the rest of the package is relinked to it. The dry run lists such
+  items under "pointed at what the organization already has", and the write's summary lists
+  them as reused. A name held by something nothing runs on — an archived or
+  suspended item, one never published, or a funnel left with no live step — cannot be pointed
+  at, so that one has to be renamed. An item pointed at the existing one is not created, so
+  what only it refers to needs no mapping, but a survey, template or channel it dragged into
+  the file is still created as a copy; say so when the user weighs the two. **The choice is the
+  user's**: report
+  what clashes and ask, never pick "point at the existing one" on your own, since a funnel
+  with the same name and different steps fails when a patient reaches it rather than here.
+  An environment that predates the check says so, and a taken name then fails the write itself.
 
 Cross-profile is the normal case: the active profile is the source, the target is named
 explicitly on `resolve` and `import`. Check you have them the right way round — an
@@ -479,13 +496,27 @@ import into the wrong organization is the failure mode this naming exists to pre
 
 ### What the package carries, and what it does not
 
-Flows, surveys, message templates and message channels are carried: naming one anywhere in
-the file pulls it in. A *referenced* pathway is not — it stays a reference for the person
+Flows, surveys, message templates, message channels and funnels are carried: naming one
+anywhere in the file pulls it in. `export` takes `--pathway`, `--flow` and `--funnel`, each
+repeatable, so a funnel can also travel on its own. A *referenced* pathway is not — it stays a reference for the person
 importing to resolve, so that packaging one care line never drags in a second.
 
 A pathway flow node's `data.flow` is never placeholdered, so that flow is not discovered.
 Credentials never travel: a template is asked which integration to use, and a channel
 arrives with none. No patient data of any kind.
+
+Funnels come with two limits worth saying before the write, not after it fails:
+
+- Only a **published** funnel with a live step travels, which is why `tabia ls funnel` lists
+  only published ones. A flow that names any other keeps it as an external reference to
+  resolve: a `$$placeholder` in the file, which `plan` lists under NEEDS RESOLVING. When nothing
+  chosen can travel, `export` is refused (`solution-package-export-no-items`) rather than
+  written empty. A funnel that does
+  travel arrives as an **unpublished draft**, and the flow cannot use it until it is
+  published.
+- A funnel whose name the target already uses is **refused before the write**, and the dry
+  run says which. Rename it or point the package at the existing one, as described above,
+  and let the user make that call.
 
 To write a package rather than move one, see the `solution-packages` skill.
 
@@ -549,7 +580,8 @@ for the missing terminal: it puts the irreversible step with the person accounta
 | The dry run notes that the environment cannot validate | The target predates `/solution-package/validate`, and the dry run fell back to local only: nothing was sent and little is proven. Say so; `--write` is the first time the server sees the package. |
 | The dry run prints no validation report and no such note, or `plan` lists a template or channel both as created and as needing resolving | A stale installed copy. Re-run the installer; see [Install and upgrade](#install-and-upgrade). |
 | A subcommand or flag is not recognised | Likely an old installed copy — re-run the installer (see above); do not trust `--version`. |
-| No keyring (headless box, container) | The CLI refuses rather than writing the token in the clear. `TABIA_ALLOW_PLAINTEXT_TOKENS=1` opts into a `600` file — only suggest it with the trade-off stated. |
+| `secret-tool is installed, but no keyring is answering it` | `secret-tool` is there but no keyring daemon runs on the D-Bus session bus, as after installing `libsecret-tools` alone on WSL. The CLI's error message prints the two commands that start a bus and a keyring; they are the user's to run, not yours. |
+| No keyring (headless box, container) | The CLI refuses rather than writing the token in the clear. `TABIA_ALLOW_PLAINTEXT_TOKENS=1` opts into a `600` file — only suggest it with the trade-off stated. The CLI creates that file itself, so do not tell anyone to create it, and the variable has to be set on every command, not only on `auth login`. |
 
 Profiles live in `~/.config/tabia/profiles.json` (no credentials, safe to read). Renaming
 a profile by hand orphans its keyring entry — log in under the new name, then

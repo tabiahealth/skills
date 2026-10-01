@@ -115,8 +115,10 @@ importing points each placeholder at something real. `tabia plan` lists them off
 
 A **care pathway** is never dragged in by being referenced — one pathway mentioning
 another leaves a placeholder, because packaging it would drag in a second care line
-nobody asked for. Flows, surveys, message templates and channels are the opposite: naming
-one anywhere pulls it into the file.
+nobody asked for. Flows, surveys, message templates, channels and funnels are the opposite: naming one
+anywhere pulls it into the file. A funnel is pulled in only if it is published and has
+a live step; any other stays a placeholder. An export whose every chosen item stays out is
+refused rather than written empty.
 
 The practical consequence when authoring: a flow your pathway starts belongs **in** the
 file as an item; a program, a team or a medical code belongs as a placeholder.
@@ -130,10 +132,16 @@ before relinking anything. Do not try to sort the items.
 ### A flow's name is unique per organization
 
 Two flows cannot share a name in one organization, and the check is case-insensitive and
-counts archived ones. Importing a file whose flow name is already taken fails the **whole**
-package. The import can rename an item on the way in, and the interface asks before
-submitting. When authoring for an organization that already has content, choose names that
-will not collide.
+counts archived ones. A funnel's name is unique per organization too, on the same terms.
+Importing a file whose flow or funnel name is already taken fails the **whole** package, so
+both the wizard and the CLI check the names first and offer, per item, to create it under
+another name or to point the package at the one the organization already has (nothing is
+created under it, and the rest of the package is relinked to it). A name held by something
+nothing runs on — an archived or suspended item, one never published, or a funnel left with no
+live step — can only be renamed. An item pointed at the existing one is not created, so what
+only it refers to needs no mapping, though a survey, template or channel it dragged into the file
+is still created as a copy. When authoring for an organization that already has content,
+choose names that will not collide, so nobody has to make that choice on import.
 
 Nothing constrains a pathway's or a survey's name.
 
@@ -153,6 +161,7 @@ Importing is not publishing. Say this to the user rather than letting them disco
 | survey | live only if it was live where it came from |
 | message template | **pending approval** by the messaging provider; a flow that sends it fails until approved |
 | message channel | **without its integration**, so it carries no credential and sends nothing until one is attached |
+| funnel | **an unpublished draft** — publish it before a flow can start it or conclude a step of it |
 
 The message template's integration is asked for at import, because it decides what kind of
 template is created. The channel's is not asked for and is left empty — an organization
