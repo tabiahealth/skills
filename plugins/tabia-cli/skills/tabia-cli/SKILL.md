@@ -292,8 +292,11 @@ recomputed per request as the intersection of its stored roles with the ones its
 **`tabia auth login` never works when an agent runs it.** The token is read with
 `getpass`, and a tool call has no controlling terminal, so the prompt raises `EOFError`
 before it can accept anything. There is no flag to add — the command is over before the
-token is asked for. So do not run it: hand the user the exact line for **their own
-terminal**, then confirm with `tabia auth list`, which you *can* run.
+token is asked for. Some agents run commands in a terminal that stays open, and there the
+prompt waits for input instead of failing. That changes nothing: the token is not yours to
+type, and a prompt left waiting is one to cancel, not to answer. So do not run it: hand the
+user the exact line for **their own terminal**, then confirm with `tabia auth list`, which
+you *can* run.
 
 ```bash
 tabia auth login --profile staging/acme --host https://staging.tabia.health
@@ -318,12 +321,13 @@ names the agent you are:
 
 | Agent driving the CLI | Label |
 |---|---|
-| Antigravity | `antigravity` |
-| Claude Code | `claude-code` |
+| Antigravity — CLI, IDE or any other surface | `antigravity` |
+| Claude Code, or Claude running these skills anywhere else | `claude-code` |
+| Gemini CLI | `gemini-cli` |
 
 The examples in this skill and in the `solution-packages` skill write `claude-code`. That
 stands for your own label: under Antigravity, put `antigravity` wherever they say
-`claude-code`.
+`claude-code`, and under Gemini CLI, `gemini-cli`.
 
 ```bash
 tabia --user-agent claude-code ls pathway
@@ -341,7 +345,8 @@ such as `diabetes-migration` splits agent traffic into a group no dashboard filt
 reads as some other tool. The dashboards filter on that fixed set, so another agent's label
 is no better: Antigravity traffic sent as `claude-code` is counted as Claude Code's. An agent
 that is not in the table has no label yet; adding one is a change to this table, not
-something to coin on the spot.
+something to coin on the spot. Until then, tell the user the table has no label for you
+before you run anything, and let them decide how to proceed.
 
 **A script you write sets it once, at the top.** A loop, a `$(tabia …)` substitution or a
 helper function is where the flag goes missing, and every call that lacks it arrives as a
@@ -577,7 +582,10 @@ To write a package rather than move one, see the `solution-packages` skill.
    and with no terminal in a tool call it raises `EOFError` and aborts. **That is the
    guard working.** Nor is feeding the answer in a fix — `input()` reads happily from a
    pipe, so `echo production/acme | tabia import … --write` is exactly as forbidden, along
-   with a heredoc, a `printf` or an expect script. The prompt is not an obstacle between
+   with a heredoc, a `printf` or an expect script. Where your commands run in a terminal
+   that stays open, the prompt waits instead of aborting, and typing the name into it —
+   through a tool that sends input to a running command, or any other way — is the same
+   thing again: cancel the command and hand it over. The prompt is not an obstacle between
    you and the write; it *is* the write's authorization, and typing that name is a person
    saying "yes, that organization, in production".
 4. Every write prints the org, host and acting user before sending. Read that banner back
@@ -612,7 +620,7 @@ for the missing terminal: it puts the irreversible step with the person accounta
 | `no profiles yet` | Nothing configured here. Give the user the `auth login` line to run themselves — you can neither run it nor mint the token for them. |
 | `no profile selected` | Profiles exist but none is active. Name one with `--profile`, or `tabia auth use <name>`; the CLI refuses rather than guessing. |
 | The "Create token" button is disabled | They hold no grantable role in that organization; global roles do not count. See [When the "Create token" button is disabled](#when-the-create-token-button-is-disabled). |
-| `EOFError` from `auth login`, or at a production confirmation | No terminal in a tool call. The first is expected and the user runs the command themselves; the second is the guard working — report the abort, never retry with `--yes`. |
+| `EOFError` from `auth login`, or at a production confirmation — or either command left waiting at its prompt | No terminal in a tool call, or one that stays open and waits. The first is expected and the user runs the command themselves; the second is the guard working — report the abort, never retry with `--yes`, and never type into a waiting prompt: cancel it and hand the command over. |
 | `… may answer with data about an identifiable person` | The endpoint is not in this environment's declared-clean set — the ordinary case, not a finding. Decide before adding `--personal-data`; if the response would describe a person, rule 2 applies and the user asks. See [`--personal-data`](#--personal-data-the-gate-and-how-to-read-it). |
 | `cannot tell whether … answers with personal data` | The declared list could not be read, for the reason printed with it, so *every* call asks. Check with `tabia api /no-personal-data-endpoints`, which is exempt from the gate. |
 | `403` from `auth status` | Unknown, tampered, revoked, expired or demoted token — the auth filter answers the same for all five, deliberately, so the status call cannot tell you which. Check in the web app whether the token is still listed and whether its owner still holds the local role; the fix either way is a fresh token the user mints and logs in with. |

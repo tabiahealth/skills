@@ -1,8 +1,12 @@
 # Tabia Skills
 
-A plugin marketplace from [Tabia Health](https://tabia.health) for [Claude Code](https://code.claude.com/docs/en/plugin-marketplaces) and [Google Antigravity](https://antigravity.google) — working knowledge about the Tabia platform, written so that a coding agent applies it the way an experienced person would.
+Agent skills from [Tabia Health](https://tabia.health) — working knowledge about the Tabia
+platform, written so that a coding agent applies it the way an experienced person would.
 
-Both Claude Code and Antigravity follow the Agent Skills format (a folder with a `SKILL.md`) and package customizations as plugins, so this repository serves both platforms.
+The repository is a [Claude Code plugin marketplace](https://code.claude.com/docs/en/plugin-marketplaces),
+and the same plugin folders install in Google's [Antigravity](https://antigravity.google) and
+[Gemini CLI](https://github.com/google-gemini/gemini-cli). All three read the Agent Skills
+format, a folder with a `SKILL.md`, so one copy of each skill serves every agent.
 
 This repository is **public**, and the plugins in it are meant for Tabia teams, customers and
 partners alike. Some of what they describe still needs access you may not have — a personal
@@ -41,54 +45,43 @@ project's `.claude/settings.json`:
 
 ### Antigravity
 
-Antigravity natively discovers and manages plugins across all surfaces (CLI, IDE, and 2.0).
-
-#### Via Antigravity CLI / TUI
-
-In an interactive session, install the plugin from a clone of this repository:
-
-```
-/plugin install ./plugins/tabia-cli
-```
-
-Or from your shell:
+Antigravity loads a plugin from a folder with a `plugin.json` at its root, and
+`plugins/tabia-cli` is one. Clone this repository and install it with the `agy` CLI:
 
 ```bash
-agy plugin install plugins/tabia-cli
+git clone https://github.com/tabiahealth/skills.git
+agy plugin install skills/plugins/tabia-cli
 ```
 
-#### Workspace-level (automatic discovery)
+`agy plugin list` shows it afterwards. `agy plugin install` stages a copy, so run it again
+after a `git pull` to pick up changes.
 
-When working inside this repository, `.agents/plugins.json` automatically registers all plugins in `plugins/`.
-
-To use plugins from this repository in another project, declare them in that project's `.agents/plugins.json`:
-
-```json
-{
-  "entries": [
-    { "path": "path/to/skills/plugins" }
-  ]
-}
-```
-
-Or inherit this repository's configuration:
-
-```json
-{
-  "inherits": [
-    { "path": "path/to/skills/.agents/plugins.json" }
-  ]
-}
-```
-
-#### Global (all projects)
-
-To install globally for all Antigravity projects, link or copy the plugin into your global configuration directory:
+You can also place the folder by hand: Antigravity reads plugins from
+`~/.gemini/config/plugins/` in every workspace, and from `.agents/plugins/` at a project's
+root in that project only.
 
 ```bash
 mkdir -p ~/.gemini/config/plugins
-ln -s /path/to/skills/plugins/tabia-cli ~/.gemini/config/plugins/tabia-cli
+cp -R skills/plugins/tabia-cli ~/.gemini/config/plugins/
 ```
+
+See Antigravity's [plugins documentation](https://antigravity.google/docs/plugins/) for the
+rest.
+
+### Gemini CLI
+
+Gemini CLI installs a skill straight from this repository, one skill per command:
+
+```
+gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/tabia-cli --consent
+gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/solution-packages --consent
+```
+
+They install for your user by default; add `--scope workspace` to install them for the current
+project only. `--consent` skips the interactive confirmation. `gemini skills list` shows what
+is installed. See Gemini CLI's
+[skills documentation](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md)
+for the rest.
 
 ## Plugins
 
@@ -100,7 +93,7 @@ ln -s /path/to/skills/plugins/tabia-cli ~/.gemini/config/plugins/tabia-cli
 
 These skills are written for an agent, not just for a reader, so several of them carry rules
 about what the agent may and may not do on your behalf. They apply the same whichever agent
-runs them — Claude Code, Antigravity or another. Two run through everything here:
+runs them — Claude Code, Antigravity, Gemini CLI or another. Two run through everything here:
 
 - **Personal data is yours to read, not the agent's.** A skill will help you write a command that
   pulls patient data into a file you own, and will decline to read those rows back into the
@@ -110,11 +103,17 @@ runs them — Claude Code, Antigravity or another. Two run through everything he
 
 ## Adding a new plugin
 
-1. `plugins/<name>/.claude-plugin/plugin.json` — Claude Code plugin manifest (`name`, `description`, `version`, `author`, `homepage`).
-2. `plugins/<name>/plugin.json` — Antigravity plugin manifest (`name`, `displayName`, `description`, `version`, `suggestedPrompts`).
-3. `plugins/<name>/skills/<skill-name>/SKILL.md` — the skills (commands, agents, rules, hooks and MCP configs can go in sibling directories).
+1. `plugins/<name>/.claude-plugin/plugin.json` — the Claude Code manifest (`name`,
+   `description`, `version`, `author`, `homepage`).
+2. `plugins/<name>/plugin.json` — the Antigravity manifest (`$schema`, `name`,
+   `description`). Keep its `name` and `description` identical to the Claude Code manifest's;
+   when you change one, change the other.
+3. `plugins/<name>/skills/<skill-name>/SKILL.md` — the skill itself (commands, agents and hooks
+   can go in sibling `commands/`, `agents/`, `hooks/` directories the same way).
 4. `plugins/<name>/README.md` — what it is and what it expects of the reader.
-5. Register it in `.claude-plugin/marketplace.json` for Claude Code. Antigravity automatically discovers it via `.agents/plugins.json`.
+5. Register it in `.claude-plugin/marketplace.json` (`name`, `source: "./plugins/<name>"`, and a
+   short `description`). Antigravity and Gemini CLI install from the folder itself, so there
+   is nothing to register for them.
 6. Open a PR.
 
 **This repository is public.** Anything merged here is published: keep internal-only hostnames,
@@ -125,8 +124,6 @@ write for a reader who does not work at Tabia. Internal-only skills belong in th
 ## Repo structure
 
 ```
-.agents/
-  plugins.json                      ← Antigravity plugin discovery manifest
 .claude-plugin/
   marketplace.json                  ← Claude Code marketplace catalog
 plugins/
