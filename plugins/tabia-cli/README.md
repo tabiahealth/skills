@@ -1,6 +1,6 @@
 # tabia-cli
 
-Agent skills, for Claude Code and Gemini CLI, for reaching a **deployed** Tabia environment —
+Agent skills, for Claude Code and Antigravity, for reaching a **deployed** Tabia environment —
 staging, production, a particular organization — from the command line with the `tabia` CLI.
 
 `tabia` is a standalone Python CLI that talks to the Tabia platform over HTTP, authenticated
@@ -57,8 +57,8 @@ stale copy.
 
 ## Use it
 
-Once the skills are installed — in Claude Code through the marketplace (see the
-[repo README](../../README.md)), or in Gemini CLI as below — just say what you want in a
+Once the plugin or skills are installed — in Claude Code through the marketplace (see the
+[repo README](../../README.md)), or in Antigravity as below — just say what you want in a
 deployed environment and the agent will pick the skill up:
 
 > "List the diabetes pathways in staging for acme"
@@ -75,17 +75,57 @@ Two skills ship here:
   only moving one: asking the platform for the format, the rules a schema cannot express, and what
   each kind arrives as once imported.
 
-## Gemini CLI
+## Antigravity
 
-The same two skills install in Gemini CLI straight from this repository, one per command:
+This plugin installs and runs natively in Google Antigravity across all surfaces:
+
+### Antigravity CLI / TUI
+
+Install the plugin from a clone of this repository:
 
 ```bash
-gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/tabia-cli --consent
-gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/solution-packages --consent
+/plugin install ./plugins/tabia-cli
 ```
 
-Add `--scope workspace` to install them for the current project instead of for your user.
+Or manage it directly from the shell using the `agy` CLI:
+
+```bash
+agy plugin install plugins/tabia-cli
+```
+
+### Workspace-level (automatic discovery)
+
+When working inside this repository, `.agents/plugins.json` automatically registers the `tabia-cli` plugin.
+
+To use the plugin in another project workspace, point to it in that project's `.agents/plugins.json`:
+
+```json
+{
+  "entries": [
+    { "path": "path/to/skills/plugins" }
+  ]
+}
+```
+
+Or inherit this repository's configuration:
+
+```json
+{
+  "inherits": [
+    { "path": "path/to/skills/.agents/plugins.json" }
+  ]
+}
+```
+
+### Global (all projects)
+
+To make it available globally across all Antigravity projects, link or copy the directory:
+
+```bash
+mkdir -p ~/.gemini/config/plugins
+ln -s /path/to/skills/plugins/tabia-cli ~/.gemini/config/plugins/tabia-cli
+```
 
 The guardrails above apply to any agent that runs these skills, not only to Claude Code. What
-changes is the label the agent puts on its CLI traffic: `gemini-cli` rather than
+changes is the label the agent puts on its CLI traffic: `antigravity` rather than
 `claude-code`, so that each agent's calls can be told apart.

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "tabia-cli",
+  "displayName": "Tabia CLI",
+  "description": "Reaching a deployed Tabia environment from the command line with the `tabia` CLI: profiles and personal access tokens, reading through `tabia ls` and `tabia api`, and moving care pathways, flows, surveys and funnels between environments or organizations with export/plan/resolve/import \u2014 or writing a solution as a package file in the first place. Encodes the guardrails that matter \u2014 personal data stays out of the transcript, and nothing is written to production without a human at the prompt.",
+  "version": "1.1.0",
+  "suggestedPrompts": [
+    "List the diabetes pathways in staging for acme",
+    "Export flow 42 from staging into a solution package",
+    "Validate our new solution package against production"
+  ]
+}

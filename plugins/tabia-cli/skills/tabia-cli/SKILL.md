@@ -318,11 +318,11 @@ names the agent you are:
 
 | Agent driving the CLI | Label |
 |---|---|
+| Antigravity | `antigravity` |
 | Claude Code | `claude-code` |
-| Gemini CLI | `gemini-cli` |
 
 The examples in this skill and in the `solution-packages` skill write `claude-code`. That
-stands for your own label: under Gemini CLI, put `gemini-cli` wherever they say
+stands for your own label: under Antigravity, put `antigravity` wherever they say
 `claude-code`.
 
 ```bash
@@ -333,13 +333,13 @@ tabia --user-agent claude-code api /currency
 It goes before or after the subcommand, like `--profile`, and applies to every command.
 The version prefix is never dropped, so all CLI traffic stays one group that can still be
 split by caller: `--user-agent claude-code` sends `tabia-cli/<version> (claude-code)`, and
-`--user-agent gemini-cli` sends `tabia-cli/<version> (gemini-cli)`.
+`--user-agent antigravity` sends `tabia-cli/<version> (antigravity)`.
 
 **The label is always exactly one from the table above, and it is the one for the agent you
 are.** It names what is driving the CLI, not the task, the customer or the script: a label
 such as `diabetes-migration` splits agent traffic into a group no dashboard filters for, and
 reads as some other tool. The dashboards filter on that fixed set, so another agent's label
-is no better: Gemini CLI traffic sent as `claude-code` is counted as Claude Code's. An agent
+is no better: Antigravity traffic sent as `claude-code` is counted as Claude Code's. An agent
 that is not in the table has no label yet; adding one is a change to this table, not
 something to coin on the spot.
 

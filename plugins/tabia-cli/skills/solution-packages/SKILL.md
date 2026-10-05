@@ -45,7 +45,7 @@ tabia --user-agent claude-code api solution-package/schema > "$work/schema.json"
 `/apiv1/solution-package/schema`.
 
 `--user-agent claude-code`, here and below, stands for the label of the agent driving the
-CLI — `gemini-cli` under Gemini CLI. The `tabia-cli` skill's "Say what is driving the CLI"
+CLI — `antigravity` under Antigravity. The `tabia-cli` skill's "Say what is driving the CLI"
 section has the full list and the rule.
 
 It answers with the shape generated from the classes that read the file, so it cannot
