@@ -195,9 +195,9 @@ rather than guessing.
 repository stays private, but no account, sign-in or `gh` stands between a person and the
 installer. What they still need from Tabia is a token in the environment itself.
 
-**`tabia --version` cannot tell you whether a copy is current** — the version string has
-not moved since the first release, so an installed copy from before a change still answers
-`0.1.0`. To find out whether a subcommand exists on this machine, ask for it:
+**`tabia --version` cannot tell you whether a copy is current** — the version string is
+not bumped with each change, so an installed copy from before a change can answer the same
+as the current one. To find out whether a subcommand exists on this machine, ask for it:
 `tabia api --help`. If it is missing, re-run the installer instead of concluding the
 feature does not exist.
 
@@ -322,14 +322,27 @@ tabia --user-agent claude-code api /currency
 
 It goes before or after the subcommand, like `--profile`, and applies to every command.
 The version prefix is never dropped, so all CLI traffic stays one group that can still be
-split by caller: `--user-agent claude-code` sends `tabia-cli/0.1.0 (claude-code)`.
+split by caller: `--user-agent claude-code` sends `tabia-cli/<version> (claude-code)`.
+
+**The label is always exactly `claude-code`.** It names what is driving the CLI, not the
+task, the customer or the script: a label such as `diabetes-migration` splits agent traffic
+into a group no dashboard filters for, and reads as some other tool.
+
+**A script you write sets it once, at the top.** A loop, a `$(tabia …)` substitution or a
+helper function is where the flag goes missing, and every call that lacks it arrives as a
+bare `tabia-cli/<version>` — which is what a person at their own terminal sends. So any
+script of yours that calls `tabia` starts with:
+
+```bash
+export TABIA_USER_AGENT=claude-code
+```
 
 **A copy that rejects the flag predates it — re-run the installer rather than dropping
 it.** Passing it after the subcommand fails legibly (`error: unrecognized arguments:
 --user-agent claude-code`); passing it before, in the form above, does not — the parser
 blames the positional instead and says `error: argument command: invalid choice:
 'claude-code'`, which reads like a mistyped subcommand and is nothing of the kind. Both
-exit 2, and neither means the label was wrong. `tabia --version` answers `0.1.0` either
+exit 2, and neither means the label was wrong. `tabia --version` answers the same either
 way, as [ever](#install-and-upgrade); `tabia --help` lists the global options, so it
 settles this one directly.
 
@@ -343,7 +356,22 @@ plus `.` `_` `-` `/`, starting with a letter or digit; anything else is refused 
 than sent.
 
 This is attribution, not access: the flag changes nothing about what a token may reach,
-and it is not a way to make a call look like it came from someone else.
+and it is not a way to make a call look like it came from someone else. For the same
+reason, never replace it with `tabia api -H 'User-Agent: …'`.
+
+### Every call goes through `tabia`
+
+**Never call a Tabia environment with an HTTP client of your own** — Python's `requests`,
+`httpx` or `urllib`, `curl`, `fetch`, anything — and never write code that reads the token
+out of the keyring to hand to one. `tabia api` reaches every endpoint, so there is nothing
+to gain, and much to lose: the [personal-data gate](#--personal-data-the-gate-and-how-to-read-it),
+the production confirmation under [Writes](#writes-the-rules) and the label above all live
+in the CLI, and a handwritten client drops all three at once. Its traffic arrives as
+`python-requests/<version>`, indistinguishable from a customer's integration.
+
+Bulk work is a shell loop over `tabia api`, or a script that shells out to `tabia` and
+starts with `export TABIA_USER_AGENT=claude-code`. If `tabia api` genuinely cannot make a
+call, say so and stop there, rather than reaching for the token.
 
 ## Reading an environment
 
