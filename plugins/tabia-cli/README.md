@@ -1,7 +1,7 @@
 # tabia-cli
 
-A Claude Code skill for reaching a **deployed** Tabia environment — staging, production, a
-particular organization — from the command line with the `tabia` CLI.
+Agent skills, for Claude Code and Gemini CLI, for reaching a **deployed** Tabia environment —
+staging, production, a particular organization — from the command line with the `tabia` CLI.
 
 `tabia` is a standalone Python CLI that talks to the Tabia platform over HTTP, authenticated
 with your personal access token. It can:
@@ -21,7 +21,7 @@ The CLI's own `--help` covers the flags. This skill covers the parts that are ea
 and expensive when you do:
 
 - **Personal data stays out of the transcript.** You may read a person's record through this CLI;
-  Claude may not read it back. The skill routes such output to a file you own, or hands you the
+  the agent may not read it back. The skill routes such output to a file you own, or hands you the
   command for your own terminal, and explains the `--personal-data` gate — what a refusal does
   and does not mean, and why being asked is the ordinary case rather than a finding.
 - **The API comes from the environment.** Each environment serves an OpenAPI document of its own
@@ -57,8 +57,9 @@ stale copy.
 
 ## Use it
 
-Once the marketplace is added and the plugin installed (see the [repo README](../../README.md)),
-just say what you want in a deployed environment and Claude Code will pick the skill up:
+Once the skills are installed — in Claude Code through the marketplace (see the
+[repo README](../../README.md)), or in Gemini CLI as below — just say what you want in a
+deployed environment and the agent will pick the skill up:
 
 > "List the diabetes pathways in staging for acme"
 >
@@ -73,3 +74,18 @@ Two skills ship here:
 - [`solution-packages`](skills/solution-packages/SKILL.md) — writing a package file rather than
   only moving one: asking the platform for the format, the rules a schema cannot express, and what
   each kind arrives as once imported.
+
+## Gemini CLI
+
+The same two skills install in Gemini CLI straight from this repository, one per command:
+
+```bash
+gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/tabia-cli --consent
+gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/solution-packages --consent
+```
+
+Add `--scope workspace` to install them for the current project instead of for your user.
+
+The guardrails above apply to any agent that runs these skills, not only to Claude Code. What
+changes is the label the agent puts on its CLI traffic: `gemini-cli` rather than
+`claude-code`, so that each agent's calls can be told apart.

@@ -10,7 +10,7 @@ description: >
   pathway, flow, survey or funnel between environments or organizations, or
   mentions `tabia`, `tabia auth`, profiles, personal access tokens (PAT),
   solution packages, or asks which endpoint does something or what it expects.
-  Personal data is the user's to read, never Claude's: never use it to bring
+  Personal data is the user's to read, never the agent's: never use it to bring
   personal data into the conversation.
 ---
 
@@ -313,7 +313,17 @@ our Datadog dashboards tell CLI traffic apart from the web application's at all.
 `--user-agent` adds the name of whatever is driving the CLI, and that is what separates a
 person working at their own terminal from an agent running the same command for them.
 
-**Pass `--user-agent claude-code` on every `tabia` command you run yourself.**
+**Pass `--user-agent <label>` on every `tabia` command you run yourself**, where the label
+names the agent you are:
+
+| Agent driving the CLI | Label |
+|---|---|
+| Claude Code | `claude-code` |
+| Gemini CLI | `gemini-cli` |
+
+The examples in this skill and in the `solution-packages` skill write `claude-code`. That
+stands for your own label: under Gemini CLI, put `gemini-cli` wherever they say
+`claude-code`.
 
 ```bash
 tabia --user-agent claude-code ls pathway
@@ -322,11 +332,16 @@ tabia --user-agent claude-code api /currency
 
 It goes before or after the subcommand, like `--profile`, and applies to every command.
 The version prefix is never dropped, so all CLI traffic stays one group that can still be
-split by caller: `--user-agent claude-code` sends `tabia-cli/<version> (claude-code)`.
+split by caller: `--user-agent claude-code` sends `tabia-cli/<version> (claude-code)`, and
+`--user-agent gemini-cli` sends `tabia-cli/<version> (gemini-cli)`.
 
-**The label is always exactly `claude-code`.** It names what is driving the CLI, not the
-task, the customer or the script: a label such as `diabetes-migration` splits agent traffic
-into a group no dashboard filters for, and reads as some other tool.
+**The label is always exactly one from the table above, and it is the one for the agent you
+are.** It names what is driving the CLI, not the task, the customer or the script: a label
+such as `diabetes-migration` splits agent traffic into a group no dashboard filters for, and
+reads as some other tool. The dashboards filter on that fixed set, so another agent's label
+is no better: Gemini CLI traffic sent as `claude-code` is counted as Claude Code's. An agent
+that is not in the table has no label yet; adding one is a change to this table, not
+something to coin on the spot.
 
 **A script you write sets it once, at the top.** A loop, a `$(tabia …)` substitution or a
 helper function is where the flag goes missing, and every call that lacks it arrives as a
@@ -334,7 +349,7 @@ bare `tabia-cli/<version>` — which is what a person at their own terminal send
 script of yours that calls `tabia` starts with:
 
 ```bash
-export TABIA_USER_AGENT=claude-code
+export TABIA_USER_AGENT=claude-code    # your own label from the table above
 ```
 
 **A copy that rejects the flag predates it — re-run the installer rather than dropping
@@ -370,8 +385,8 @@ in the CLI, and a handwritten client drops all three at once. Its traffic arrive
 `python-requests/<version>`, indistinguishable from a customer's integration.
 
 Bulk work is a shell loop over `tabia api`, or a script that shells out to `tabia` and
-starts with `export TABIA_USER_AGENT=claude-code`. If `tabia api` genuinely cannot make a
-call, say so and stop there, rather than reaching for the token.
+starts by exporting `TABIA_USER_AGENT` with your label, as above. If `tabia api` genuinely
+cannot make a call, say so and stop there, rather than reaching for the token.
 
 ## Reading an environment
 
