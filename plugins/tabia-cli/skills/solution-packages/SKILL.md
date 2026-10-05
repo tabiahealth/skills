@@ -215,7 +215,7 @@ protocol into the platform's terms, as a short list:
 
 Ask the user — ideally the clinician who owns the protocol — whether that is what the
 protocol says. A wrong interpretation caught here costs one message; caught after import, a
-care line that speaks to patients. Choose names that will not collide in the target.
+care pathway that speaks to patients. Choose names that will not collide in the target.
 
 **2. Get the format and a scaffold** — the schema and a real export of something close, as
 in [Never guess the format](#never-guess-the-format--ask-for-it) and
