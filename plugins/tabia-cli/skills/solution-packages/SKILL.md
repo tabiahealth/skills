@@ -231,6 +231,10 @@ tabia --user-agent claude-code validate "$work/solution.json" --profile staging/
 tabia --user-agent claude-code render "$work/solution.json" --format markdown
 ```
 
+Run it **without `--map`** while writing: there is no map yet, and none is needed for the
+target to check the rest of the file. Once step 6 has run `resolve`, add
+`--map "$work/map.json"` to every later round, so what is resolved stops being listed.
+
 `validate` sends the file whatever the map holds — `import` would refuse while a reference is
 unmapped — and splits the answer: **NEEDS A MAPPING** is the expected state of a draft, and
 **IN THE FILE ITSELF** is the work. Its exit status says which: **0** the file has no errors
@@ -247,7 +251,8 @@ that, and neither does it check a survey question carrying an id from elsewhere 
 diagram matches the sketch.
 
 **5. Show it.** Give the user the diagram — Mermaid renders in most places a conversation
-goes, and `render --format html -o "$work/solution.html"` is a page to send to a clinician —
+goes, and `render --format html -o "$work/solution.html"` is a page to send to a clinician
+(it fetches Mermaid from a CDN to draw; where that is blocked, send the Markdown instead) —
 together with the NEEDS A MAPPING list and every warning. The diagram, not the JSON, is what a
 clinician can check against the protocol.
 

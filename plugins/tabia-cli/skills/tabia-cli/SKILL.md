@@ -12,7 +12,9 @@ description: >
   solution packages, or asks which endpoint does something or what it expects.
   Also for creating and explaining solutions: drawing what a pathway or package
   does with `tabia render`, and checking a package still being written with
-  `tabia validate`. Personal data is the user's to read, never Claude's: never use it to bring
+  `tabia validate`.
+
+  Personal data is the user's to read, never Claude's: never use it to bring
   personal data into the conversation.
 ---
 
@@ -567,7 +569,11 @@ tabia --user-agent claude-code validate "$work/draft.json" --profile staging/acm
   every item and what it refers to, a dashed node for each reference the target must
   supply, each care pathway's graph (events, conditions, delays) and each flow's cards with
   their branches. Names only: no ids, and a message body only as its first words. The HTML
-  page draws with Mermaid loaded from a CDN, in the browser; nothing of the package is sent.
+  page draws with Mermaid loaded from a CDN, in the browser; nothing of the package is sent,
+  but the browser **needs network access to that CDN** to draw. Where that is blocked —
+  a locked-down machine, a policy against external requests — the page still shows its
+  outline tables and each diagram's source, and `--format markdown` or the default Mermaid
+  text is the fully offline alternative.
 - **`validate`** sends a package to the target's read-only validation **whatever the map
   holds** — `import` refuses while a reference is unmapped — and keeps NEEDS A MAPPING apart
   from what is wrong IN THE FILE ITSELF. Exit **0** no errors of the file's own, **1** errors
