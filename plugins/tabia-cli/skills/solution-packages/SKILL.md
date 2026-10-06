@@ -7,8 +7,11 @@ description: >
   guessing it, the rules a schema cannot express, and what each kind arrives as
   once imported. Use this skill when the user wants to create or edit a solution
   package by hand, author a care pathway or flow as a file, or asks what belongs
-  in a package JSON. For moving an existing solution between environments, and
-  for every `tabia` command used here, see the `tabia-cli` skill.
+  in a package JSON, or turn a clinical protocol, a spreadsheet or a conversation
+  into a solution — the recipe here takes a document to a validated package in a
+  staging organization, with `tabia validate` and `tabia render` in the loop. For
+  moving an existing solution between environments, and for every `tabia` command
+  used here, see the `tabia-cli` skill.
 ---
 
 # Writing a solution package
@@ -58,6 +61,17 @@ drift from what the import accepts. Laid out the way an OpenAPI document is:
 
 References inside it are `#/components/schemas/<name>` and resolve against the document
 itself, so a payload can be followed to the types nested inside it.
+
+It is structure without prose: no field carries a description, and a flow's actions, a
+pathway's graph and its task specifications are free-form maps inside it. So read it for
+names and types, and read a real export (below) for what goes inside those maps:
+
+```bash
+jq '.payloads' "$work/schema.json"                                   # kind -> its payload type
+jq '.components.schemas.SurveyExportDTO.properties | keys' "$work/schema.json"
+jq '[.components.schemas | to_entries[] | .key as $t | .value.properties // {} | to_entries[]
+     | select(.value["x-whenAbsent"] == "ask") | "\($t).\(.key)"]' "$work/schema.json"   # asked for when left out
+```
 
 **Do not paste field lists into a conversation from memory, and do not trust an older
 answer.** The kinds a package carries have grown more than once. The schema is the only
@@ -179,6 +193,84 @@ without it.
 
 A package is configuration. If you think you are looking at a person in one, stop.
 
+## From a protocol document to a validated package in staging
+
+The whole authoring job, end to end. Every step until the import writes **nothing**, so
+iterate as often as the file needs: `validate` and `render` cost one read-only request
+and an offline read, and the target answers every problem at once. Do it in a
+non-production organization meant for building — not the one a customer is shown — and
+let the loop run as many rounds as it takes. The freedom ends at `--write`.
+
+**0. Read the source for configuration, never for people.** A protocol, a spreadsheet or a
+conversation describes what happens to *anyone* on the pathway. If it carries an example
+patient, a real case, a phone number or a date of birth, none of that goes into the file —
+a package is configuration, and a person in one is a defect. If the document itself is a
+patient's record, stop and say so; it is not a source for a solution. The personal-data
+rules of the `tabia-cli` skill apply to the source as much as to any API response.
+
+**1. Sketch it before writing JSON, and have the user check the sketch.** Translate the
+protocol into the platform's terms, as a short list:
+
+- the **care pathway**: its events, their order and timing, the conditions between them;
+- the **flows**: what is said to the patient, the answers that branch, where each branch goes;
+- the **surveys**: the questions and their types;
+- the **message templates** (what is sent outside a conversation) and the **channels**;
+- what the **target supplies**: the program, the teams, the medical codes, an integration.
+
+Ask the user — ideally the clinician who owns the protocol — whether that is what the
+protocol says. A wrong interpretation caught here costs one message; caught after import, a
+care pathway that speaks to patients. Choose names that will not collide in the target.
+
+**2. Get the format and a scaffold** — the schema and a real export of something close, as
+in [Never guess the format](#never-guess-the-format--ask-for-it) and
+[Start from a real export](#start-from-a-real-export).
+
+**3. Write the file** in the working directory, with readable refs (`triage-flow`,
+`bp-survey`) and placeholders for everything in the last bullet above.
+
+**4. Loop: validate, fix, render.**
+
+```bash
+tabia --user-agent claude-code validate "$work/solution.json" --profile staging/acme
+tabia --user-agent claude-code render "$work/solution.json" --format markdown
+```
+
+Run it **without `--map`** while writing: there is no map yet, and none is needed for the
+target to check the rest of the file. Once step 6 has run `resolve`, add
+`--map "$work/map.json"` to every later round, so what is resolved stops being listed.
+
+`validate` sends the file whatever the map holds — `import` would refuse while a reference is
+unmapped — and splits the answer: **NEEDS A MAPPING** is the expected state of a draft, and
+**IN THE FILE ITSELF** is the work. Its exit status says which: **0** the file has no errors
+of its own, **1** fix what it lists, **2** the target could not be asked (say so; do not read
+it as a pass). Fix every error at its `path` before the next round, as
+[The dry run asks the target](#the-dry-run-asks-the-target) describes. `--json` gives the same
+report for reading in a loop.
+
+Then **read the diagram yourself**: every flow reachable from the pathway, every branch going
+somewhere, every dashed node something the target can plausibly supply. `render` draws a
+transition to a card the flow does not have as a *missing card* — the validator does not check
+that, and neither does it check a survey question carrying an id from elsewhere (see
+[the rule](#a-surveys-question-ids-must-be-absent)). Repeat until `validate` exits 0 and the
+diagram matches the sketch.
+
+**5. Show it.** Give the user the diagram — Mermaid renders in most places a conversation
+goes, and `render --format html -o "$work/solution.html"` is a page to send to a clinician
+(it fetches Mermaid from a CDN to draw; where that is blocked, send the Markdown instead) —
+together with the NEEDS A MAPPING list and every warning. The diagram, not the JSON, is what a
+clinician can check against the protocol.
+
+**6. Resolve and confirm.** `tabia resolve` against the staging organization writes the map;
+fill what it leaves with the user, never with an invented id, then `validate --map` until it
+says *importable as is*. Then the [plan, resolve, import](#then-plan-resolve-import) sequence
+below: the dry-run `import`, and `--write` to staging only once the user says so.
+
+**7. Look at what arrived.** Flows land as drafts and templates await approval
+([What each kind arrives as](#what-each-kind-arrives-as)). Publish in staging, run it with a
+test contact, and only then think about production — by exporting **from staging**, so what
+moves is the exercised configuration rather than the hand-written file, with the `tabia-cli`
+skill's workflow.
+
 ## Then: plan, resolve, import
 
 Once the file is written, the sequence is the `tabia-cli` skill's, unchanged:
@@ -192,7 +284,10 @@ tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.jso
 
 `plan` is offline and is the cheapest check on a hand-written file: it reads the items,
 subtracts the refs the file satisfies itself, and lists what is left. Run it after every
-edit.
+edit. While the file is still a draft, `tabia validate` is the step between `plan` and
+`resolve`: the same read-only request as the dry run, sent whatever the map holds, so the
+target checks the rest of the file before anyone resolves a reference. `tabia render` draws
+the file at any point, offline.
 
 ### The dry run asks the target
 
@@ -252,10 +347,10 @@ exercised nowhere, and a care pathway drives automation that speaks to patients.
 
 1. **Import to a non-production environment first, and look at the result.** A solution
    that parses is not a solution that behaves.
-2. **The dry run is not optional.** Run `import` without `--write`, fix what its report
-   lists until the package is importable, and show the user the final report, warnings
-   included, before proposing the real one. See
-   [The dry run asks the target](#the-dry-run-asks-the-target).
+2. **The dry run is not optional**, and `validate` while writing does not replace it. Run
+   `import` without `--write`, fix what its report lists until the package is importable,
+   and show the user the final report, warnings included, before proposing the real one.
+   See [The dry run asks the target](#the-dry-run-asks-the-target).
 3. **Confirm with the user before any write.** Approval for one is not approval for the
    next.
 4. **Never pass `--yes`.** It skips the production confirmation, which exists for this.

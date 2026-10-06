@@ -13,6 +13,9 @@ with your personal access token. It can:
   one JSON package, `plan` it offline, `resolve` its external references against the target
   organization, then `import` it (dry run first, always: the target validates the package
   and reports every problem, without writing anything);
+- **write and explain a solution** — `validate` a package still being written against a staging
+  organization without waiting for every reference to be resolved, and `render` any package as a
+  diagram (Mermaid, Markdown or an HTML page) of its pathways, flows and what they refer to;
 - **manage profiles and tokens** — one profile per environment/organization pair, tokens held in
   the OS keyring.
 

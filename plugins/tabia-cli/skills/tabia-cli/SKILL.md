@@ -10,6 +10,10 @@ description: >
   pathway, flow, survey or funnel between environments or organizations, or
   mentions `tabia`, `tabia auth`, profiles, personal access tokens (PAT),
   solution packages, or asks which endpoint does something or what it expects.
+  Also for creating and explaining solutions: drawing what a pathway or package
+  does with `tabia render`, and checking a package still being written with
+  `tabia validate`.
+
   Personal data is the user's to read, never the agent's: never use it to bring
   personal data into the conversation.
 ---
@@ -566,6 +570,63 @@ Funnels come with two limits worth saying before the write, not after it fails:
   and let the user make that call.
 
 To write a package rather than move one, see the `solution-packages` skill.
+
+## Creating and explaining solutions
+
+The same package file that moves a solution is also how one gets **written** and
+**explained**. Two commands make that work, and neither writes anything:
+
+```bash
+tabia --user-agent claude-code render "$work/diabetes.json"                      # Mermaid: the package
+tabia --user-agent claude-code render "$work/diabetes.json" --flow "Boas-vindas" # one flow's cards
+tabia --user-agent claude-code render "$work/diabetes.json" --format markdown    # all, fenced
+tabia --user-agent claude-code render "$work/diabetes.json" --format html -o "$work/diabetes.html"
+tabia --user-agent claude-code validate "$work/draft.json" --profile staging/acme  # a draft, checked
+```
+
+- **`render`** reads the file and nothing else — no profile, no server, no gate. It draws
+  every item and what it refers to, a dashed node for each reference the target must
+  supply, each care pathway's graph (events, conditions, delays) and each flow's cards with
+  their branches. Names only: no ids, and a message body only as its first words. The HTML
+  page draws with Mermaid loaded from a CDN, in the browser; nothing of the package is sent,
+  but the browser **needs network access to that CDN** to draw. Where that is blocked —
+  a locked-down machine, a policy against external requests — the page still shows its
+  outline tables and each diagram's source, and `--format markdown` or the default Mermaid
+  text is the fully offline alternative.
+- **`validate`** sends a package to the target's read-only validation **whatever the map
+  holds** — `import` refuses while a reference is unmapped — and keeps NEEDS A MAPPING apart
+  from what is wrong IN THE FILE ITSELF. Exit **0** no errors of the file's own, **1** errors
+  to fix, **2** could not ask. The `solution-packages` skill has the whole authoring loop.
+
+**Offer a diagram after an export and after any authoring session.** One line —
+"want me to draw it?" — then `render --format markdown`, or the HTML page when the user will
+pass it on. A diagram is how a clinician checks that a pathway does what the protocol says,
+how a customer sees what they are getting, and how you review a file you just wrote.
+
+### Things to ask for
+
+A menu worth offering when the user is not sure what this can do:
+
+- *"Draw the diabetes pathway in staging/acme for the clinical team."* — `ls`, `export`,
+  `render --format html`.
+- *"What does the welcome flow say, and where does each answer go?"* — `render --flow`, then
+  explain it card by card in plain words.
+- *"What would this package need from the customer's organization?"* — `plan`, or the dashed
+  nodes of `render`: the program, teams, codes and integrations to point at.
+- *"Turn this hypertension protocol into a care pathway in our staging org."* — the
+  `solution-packages` recipe: sketch, write, `validate`, fix, `render`, repeat, then import
+  to staging with the user's go-ahead.
+- *"Here is a spreadsheet of follow-up messages — make them templates and a flow."* — the same
+  recipe, starting from an export of a flow that already sends templates.
+- *"Review this package before we import it."* — `render` to see its shape, `validate` against
+  the target to hear the target's view, then the dry-run `import`.
+- *"What changed in production since we deployed this?"* — `diff`, where the installed CLI has
+  it, and `render` of both sides when the change is structural.
+
+The personal-data rules above hold here unchanged. A package carries configuration, and so
+does a diagram of one; a protocol or spreadsheet given as a source may not — never copy a
+person from it into a package, and treat a source that turns out to be a patient's record as
+the rules above say.
 
 ## Writes: the rules
 
