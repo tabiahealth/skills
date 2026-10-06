@@ -1,0 +1,5 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "tabia-cli",
+  "description": "Reaching a deployed Tabia environment from the command line with the `tabia` CLI: profiles and personal access tokens, reading through `tabia ls` and `tabia api`, and moving care pathways, flows, surveys and funnels between environments or organizations with export/plan/resolve/import — or writing a solution as a package file in the first place, checking the draft with `tabia validate` and drawing it with `tabia render`. Encodes the guardrails that matter — personal data stays out of the transcript, and nothing is written to production without a human at the prompt."
+}

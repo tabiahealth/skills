@@ -11,7 +11,7 @@
     {
       "name": "tabia-cli",
       "source": "./plugins/tabia-cli",
-      "description": "Reaching a deployed Tabia environment from the command line with the `tabia` CLI: profiles and personal access tokens, listing and reading through `tabia api`, and moving care pathways, flows, surveys and funnels between environments or organizations with export/plan/resolve/import \u2014 or writing a solution as a package file in the first place. Treats personal data as the user's to read, never Claude's."
+      "description": "Reaching a deployed Tabia environment from the command line with the `tabia` CLI: profiles and personal access tokens, listing and reading through `tabia api`, and moving care pathways, flows, surveys and funnels between environments or organizations with export/plan/resolve/import \u2014 or writing a solution as a package file in the first place. Treats personal data as the user's to read, never the agent's."
     }
   ]
 }
