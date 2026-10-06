@@ -4,9 +4,9 @@ Agent skills from [Tabia Health](https://tabia.health) — working knowledge abo
 platform, written so that a coding agent applies it the way an experienced person would.
 
 The repository is a [Claude Code plugin marketplace](https://code.claude.com/docs/en/plugin-marketplaces),
-and the same plugin folders install in Google's [Antigravity](https://antigravity.google) and
-[Gemini CLI](https://github.com/google-gemini/gemini-cli). All three read the Agent Skills
-format, a folder with a `SKILL.md`, so one copy of each skill serves every agent.
+and the same plugin folders install in Google's [Antigravity](https://antigravity.google). Both
+read the Agent Skills format, a folder with a `SKILL.md`, so one copy of each skill serves
+every agent.
 
 This repository is **public**, and the plugins in it are meant for Tabia teams, customers and
 partners alike. Some of what they describe still needs access you may not have — a personal
@@ -68,21 +68,6 @@ cp -R skills/plugins/tabia-cli ~/.gemini/config/plugins/
 See Antigravity's [plugins documentation](https://antigravity.google/docs/plugins/) for the
 rest.
 
-### Gemini CLI
-
-Gemini CLI installs a skill straight from this repository, one skill per command:
-
-```
-gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/tabia-cli --consent
-gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/solution-packages --consent
-```
-
-They install for your user by default; add `--scope workspace` to install them for the current
-project only. `--consent` skips the interactive confirmation. `gemini skills list` shows what
-is installed. See Gemini CLI's
-[skills documentation](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md)
-for the rest.
-
 ## Plugins
 
 | Plugin | Description |
@@ -93,7 +78,7 @@ for the rest.
 
 These skills are written for an agent, not just for a reader, so several of them carry rules
 about what the agent may and may not do on your behalf. They apply the same whichever agent
-runs them — Claude Code, Antigravity, Gemini CLI or another. Two run through everything here:
+runs them — Claude Code, Antigravity or another. Two run through everything here:
 
 - **Personal data is yours to read, not the agent's.** A skill will help you write a command that
   pulls patient data into a file you own, and will decline to read those rows back into the
@@ -112,8 +97,8 @@ runs them — Claude Code, Antigravity, Gemini CLI or another. Two run through e
    can go in sibling `commands/`, `agents/`, `hooks/` directories the same way).
 4. `plugins/<name>/README.md` — what it is and what it expects of the reader.
 5. Register it in `.claude-plugin/marketplace.json` (`name`, `source: "./plugins/<name>"`, and a
-   short `description`). Antigravity and Gemini CLI install from the folder itself, so there
-   is nothing to register for them.
+   short `description`). Antigravity installs from the folder itself, so there is nothing to
+   register for it.
 6. Open a PR.
 
 **This repository is public.** Anything merged here is published: keep internal-only hostnames,

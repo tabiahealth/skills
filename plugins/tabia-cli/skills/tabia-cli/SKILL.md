@@ -323,11 +323,10 @@ names the agent you are:
 |---|---|
 | Antigravity — CLI, IDE or any other surface | `antigravity` |
 | Claude Code, or Claude running these skills anywhere else | `claude-code` |
-| Gemini CLI | `gemini-cli` |
 
 The examples in this skill and in the `solution-packages` skill write `claude-code`. That
 stands for your own label: under Antigravity, put `antigravity` wherever they say
-`claude-code`, and under Gemini CLI, `gemini-cli`.
+`claude-code`.
 
 ```bash
 tabia --user-agent claude-code ls pathway

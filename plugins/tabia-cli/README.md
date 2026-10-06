@@ -1,6 +1,6 @@
 # tabia-cli
 
-Agent skills, for Claude Code, Antigravity and Gemini CLI, for reaching a **deployed** Tabia
+Agent skills, for Claude Code and Antigravity, for reaching a **deployed** Tabia
 environment — staging, production, a particular organization — from the command line with the
 `tabia` CLI.
 
@@ -58,8 +58,8 @@ stale copy.
 
 ## Use it
 
-Once the plugin or skills are installed — in Claude Code through the marketplace (see the
-[repo README](../../README.md)), or in Antigravity or Gemini CLI as below — just say what you
+Once the plugin is installed — in Claude Code through the marketplace (see the
+[repo README](../../README.md)), or in Antigravity as below — just say what you
 want in a deployed environment and the agent will pick the skill up:
 
 > "List the diabetes pathways in staging for acme"
@@ -88,19 +88,8 @@ agy plugin install skills/plugins/tabia-cli
 Run it again after a `git pull` to pick up changes. To place the folder by hand instead, and
 for workspace-only installs, see the [repo README](../../README.md#antigravity).
 
-## Gemini CLI
-
-The same two skills install in Gemini CLI straight from this repository, one per command:
-
-```bash
-gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/tabia-cli --consent
-gemini skills install https://github.com/tabiahealth/skills.git --path plugins/tabia-cli/skills/solution-packages --consent
-```
-
-Add `--scope workspace` to install them for the current project instead of for your user.
-
 ## Any agent
 
 The guardrails above apply to any agent that runs these skills, not only to Claude Code. What
-changes is the label the agent puts on its CLI traffic — `claude-code`, `antigravity` or
-`gemini-cli` — so that each agent's calls can be told apart.
+changes is the label the agent puts on its CLI traffic — `claude-code` or `antigravity` — so
+that each agent's calls can be told apart.
