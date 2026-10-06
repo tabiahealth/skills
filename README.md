@@ -45,28 +45,19 @@ project's `.claude/settings.json`:
 
 ### Antigravity
 
-Antigravity loads a plugin from a folder with a `plugin.json` at its root, and
-`plugins/tabia-cli` is one. Clone this repository and install it with the `agy` CLI:
+Install straight from this repository with the `agy` CLI:
 
 ```bash
-git clone https://github.com/tabiahealth/skills.git
-agy plugin install skills/plugins/tabia-cli
+agy plugin install https://github.com/tabiahealth/skills
 ```
 
-`agy plugin list` shows it afterwards. `agy plugin install` stages a copy, so run it again
-after a `git pull` to pick up changes.
+`agy` clones the repository, finds the `plugins/` folder and installs every plugin in it
+into `~/.gemini/config/plugins/`, where Antigravity reads plugins in every workspace. Run
+the same command again to update. `agy plugin list` shows what is installed.
 
-You can also place the folder by hand: Antigravity reads plugins from
-`~/.gemini/config/plugins/` in every workspace, and from `.agents/plugins/` at a project's
-root in that project only.
-
-```bash
-mkdir -p ~/.gemini/config/plugins
-cp -R skills/plugins/tabia-cli ~/.gemini/config/plugins/
-```
-
-See Antigravity's [plugins documentation](https://antigravity.google/docs/plugins/) for the
-rest.
+For a single project only, copy the plugin folder into `.agents/plugins/` at that project's
+root instead. See Antigravity's [plugins documentation](https://antigravity.google/docs/plugins/)
+for the rest.
 
 ## Plugins
 

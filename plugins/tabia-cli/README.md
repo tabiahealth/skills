@@ -78,15 +78,14 @@ Two skills ship here:
 
 ## Antigravity
 
-Install the plugin from a clone of this repository with the `agy` CLI:
+Install the plugin straight from this repository with the `agy` CLI:
 
 ```bash
-git clone https://github.com/tabiahealth/skills.git
-agy plugin install skills/plugins/tabia-cli
+agy plugin install https://github.com/tabiahealth/skills
 ```
 
-Run it again after a `git pull` to pick up changes. To place the folder by hand instead, and
-for workspace-only installs, see the [repo README](../../README.md#antigravity).
+Run it again to update. For workspace-only installs, see the
+[repo README](../../README.md#antigravity).
 
 ## Any agent
 
