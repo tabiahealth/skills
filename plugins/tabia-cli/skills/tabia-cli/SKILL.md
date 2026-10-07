@@ -493,7 +493,7 @@ tabia export --pathway 42 -o "$work/diabetes.json"                  # 2. flows, 
 tabia plan "$work/diabetes.json"                                    # 3. offline: creates vs needs
 tabia resolve "$work/diabetes.json" --profile production/acme -o "$work/map.json"
 tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme          # dry run: validated, not written
-tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme --write
+tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme --write --expect <digest>   # the line the dry run printed
 ```
 
 **Write packages outside the working tree** — `mktemp -d`, or the session's scratchpad.
@@ -520,6 +520,12 @@ a package is the user's decision, not a default.
   one. A clean report is not a guarantee: it does not check that the ids in the map exist,
   and it cannot see what only the write finds out. The `solution-packages` skill covers
   reading the report to fix a file.
+- A dry run the target accepts ends with a **plan digest** and the exact command that writes
+  it, `--write --expect <digest>` (CLI 0.4.0 and later). The digest covers the file, the map,
+  the renames, the host and the organization the token reaches; `--expect` refuses, having
+  written nothing, when any of them differs from that dry run. Hand that line over as
+  printed — never one rebuilt by hand, and never with a digest copied from a later run the
+  user has not seen.
 - On an environment without that endpoint (`404`), the CLI says so and falls back to a
   dry run that is local only: banner and items, nothing sent, little proven. Say that to
   the user; `--write` is then the first time the server sees the package.
@@ -638,11 +644,15 @@ the rules above say.
    `tabia api`. Approval for one write is not approval for the next.
 3. **Never pass `--yes`.** It skips the production confirmation, which is exactly the
    prompt a human should be answering. Expect to meet this as a failure rather than as a
-   policy: a write to a `production/` profile asks for the profile name with `input()`,
-   and with no terminal in a tool call it raises `EOFError` and aborts. **That is the
-   guard working.** Nor is feeding the answer in a fix — `input()` reads happily from a
-   pipe, so `echo production/acme | tabia import … --write` is exactly as forbidden, along
-   with a heredoc, a `printf` or an expect script. Where your commands run in a terminal
+   policy: a write to a `production/` profile asks for the profile name on the terminal,
+   and with no terminal in a tool call it is refused — "no terminal here to confirm on",
+   nothing sent (a CLI older than 0.4.0 raises `EOFError` instead). **That is the guard
+   working.** Nor is feeding the answer in a fix. From 0.4.0 the question is not read from
+   stdin, so `echo production/acme | tabia import … --write` is refused the same way;
+   an older CLI reads it happily from a pipe, and doing so is exactly as forbidden, along
+   with a heredoc, a `printf`, a pseudo-terminal or an expect script. In Claude Code, the
+   plugin's hook blocks any `tabia` command carrying `--yes` before it runs; meeting that
+   block is the rule being applied, not a hurdle to route around. Where your commands run in a terminal
    that stays open, the prompt waits instead of aborting, and typing the name into it —
    through a tool that sends input to a running command, or any other way — is the same
    thing again: cancel the command and hand it over. The prompt is not an obstacle between
@@ -667,8 +677,11 @@ for the missing terminal: it puts the irreversible step with the person accounta
 2. **Show the dry run**: the validation report, warnings included, and the
    org/host/acting-user banner it printed, so the user decides with the facts in front of
    them. Hand nothing over while the report says the package is not importable.
-3. **Hand over one copy-pasteable command** for their own terminal — the same one, with
-   `--write` and no `--yes`. Say that the CLI will ask them to type the profile name.
+3. **Hand over the command the dry run printed** for their own terminal —
+   `… --write --expect <digest>`, and no `--yes`. Say that the CLI will ask them to type the
+   profile name, and that `--expect` makes it refuse if anything changed since the dry run
+   they read. (A CLI older than 0.4.0 prints no digest: hand over the same command with
+   `--write` instead, and suggest upgrading.)
 4. **Verify afterwards** with read-only commands and report what actually landed rather
    than assuming it worked.
 
@@ -681,6 +694,9 @@ for the missing terminal: it puts the irreversible step with the person accounta
 | `no profile selected` | Profiles exist but none is active. Name one with `--profile`, or `tabia auth use <name>`; the CLI refuses rather than guessing. |
 | The "Create token" button is disabled | They hold no grantable role in that organization; global roles do not count. See [When the "Create token" button is disabled](#when-the-create-token-button-is-disabled). |
 | `EOFError` from `auth login`, or at a production confirmation — or either command left waiting at its prompt | No terminal in a tool call, or one that stays open and waits. The first is expected and the user runs the command themselves; the second is the guard working — report the abort, never retry with `--yes`, and never type into a waiting prompt: cancel it and hand the command over. |
+| `no terminal here to confirm on` | A production write from a tool call, on CLI 0.4.0 or later. The guard working: nothing was sent. Hand the user the command the dry run printed. |
+| `not the one the dry run showed` | `--expect` caught a change since the dry run: the file, the map, a rename, the profile or the organization it reaches. Run the dry run again and show it; never copy the new digest across without the user seeing that run. |
+| A `tabia` command blocked by a hook for `--yes` | The plugin's hook, applying rule 3 of [Writes](#writes-the-rules). Drop `--yes`; for production, hand the command over. |
 | `… may answer with data about an identifiable person` | The endpoint is not in this environment's declared-clean set — the ordinary case, not a finding. Decide before adding `--personal-data`; if the response would describe a person, rule 2 applies and the user asks. See [`--personal-data`](#--personal-data-the-gate-and-how-to-read-it). |
 | `cannot tell whether … answers with personal data` | The declared list could not be read, for the reason printed with it, so *every* call asks. Check with `tabia api /no-personal-data-endpoints`, which is exempt from the gate. |
 | `403` from `auth status` | Unknown, tampered, revoked, expired or demoted token — the auth filter answers the same for all five, deliberately, so the status call cannot tell you which. Check in the web app whether the token is still listed and whether its owner still holds the local role; the fix either way is a fresh token the user mints and logs in with. |
