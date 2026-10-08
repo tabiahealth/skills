@@ -441,13 +441,13 @@ this document is where the path, the method, the parameters and the body come fr
 paths and payloads recalled from memory are not a source. Neither is a source checkout,
 which may not match the version that environment is running.
 
-It is about a megabyte, over a thousand paths — far too much to load into a conversation to
+It is a couple of megabytes, over a thousand paths — far too much to load into a conversation to
 write one call. **Ask the CLI for the slice instead of fetching the document:**
 
 ```bash
-tabia --user-agent claude-code api pathway --endpoints                  # operations that mention it
-tabia --user-agent claude-code api /pathway/42 -X PUT --describe --json # what that call takes and answers
-tabia --user-agent claude-code api /pathway/42 --describe               # every method on that path, as text
+tabia --user-agent claude-code api pathway --endpoints                   # operations that mention it
+tabia --user-agent claude-code api /pathway/42 -X POST --describe --json # what that call takes and answers
+tabia --user-agent claude-code api /pathway/42 --describe                # every method on that path, as text
 ```
 
 - `--endpoints` matches the word against each operation's path, summary and tags, ignoring case,
@@ -472,7 +472,7 @@ into the work directory and query the file — never print it, and never fetch i
 work=${work:-$(mktemp -d)}
 spec="$work/openapi.json"
 tabia --user-agent claude-code api /openapi.json > "$spec"
-jq '.paths["/pathway/{id}"].put.requestBody.content["application/json"].schema' "$spec"
+jq '.paths["/pathway/{id}"].post.requestBody.content["application/json"].schema' "$spec"
 jq '.components.schemas["<Name>"]' "$spec"                               # follow a $ref by hand
 ```
 
@@ -485,6 +485,13 @@ What the document is, and what it is not:
   has a dry run and `tabia api` does not: a `POST`, `PUT` or `DELETE` is sent the moment
   it runs. So checking the body against the schema is the only check before the call
   lands, and the confirmation under [Writes](#writes-the-rules) still applies after it.
+- **Read each field's `description`, not only `required`.** An update can take the whole
+  object, and a field left out is not always left alone: on `POST /pathway/{id}`, `icds` or
+  `journeys` absent means removed, and `endDateExplanation` absent becomes `null`. The
+  descriptions say which fields are replaced and which are kept. To change one field, `GET` the
+  object, change that field, and send the whole thing back.
+- **Do not assume the method.** Updates here are often `POST /<resource>/{id}`, not `PUT`;
+  `--describe` without `-X` lists the methods a path has.
 - **It is not a permission list.** It lists operations whatever the token's roles, so a
   `403` on an operation it lists still means [roles too narrow](#troubleshooting).
 - **It is not the personal-data list either.** `/no-personal-data-endpoints` alone decides
@@ -531,7 +538,11 @@ people and gets reworded, and it costs more context for the same facts.
 - `plan --json`: what it creates, and `external` grouped by placeholder type, each with
   `resolvable` and its refs; `offline` says whether the target was asked.
 - `auth status --json` and `auth list --json` say which organization each profile reaches and
-  whether its token answers — check them before a cross-profile step.
+  whether its token answers — check them before a cross-profile step. `auth status` exits 0 only
+  when the token answered; in `auth list`, a non-`null` `error` is the profile whose token did not.
+  `active` only says whether that profile is the one selected with `auth use`, not whether its
+  token works. `token.listed: false` means the token authenticated but is not among the acting
+  user's own tokens.
 - **A command you hand to the user for their own terminal goes without `--json`**; the text is
   written for them.
 
