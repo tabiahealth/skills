@@ -29,9 +29,13 @@ and expensive when you do:
   command for your own terminal, and explains the `--personal-data` gate — what a refusal does
   and does not mean, and why being asked is the ordinary case rather than a finding.
 - **The API comes from the environment.** Each environment serves an OpenAPI document of its own
-  API. The skill fetches it once, queries it with `jq` for the path, parameters and body it
-  needs, and reads the request schema before any write through `tabia api`. It does not guess
-  endpoints from memory.
+  API. The skill asks the CLI for only the slice it needs — `tabia api <word> --endpoints` to find
+  the endpoint, `tabia api <path> -X <METHOD> --describe` for its parameters, body and responses —
+  rather than loading the whole document, and reads the request schema before any write through
+  `tabia api`. It does not guess endpoints from memory.
+- **It reads JSON, not text.** When the agent reads a command's result, it asks for `--json` and
+  checks the exit code; an ambiguous match from `resolve` comes back with its candidates, so you
+  pick one instead of editing the map file by hand.
 - **Production writes end with a person.** Nothing is written without `--write` (the dry run
   sends only a read-only validation request, and the skill fixes what it reports); a write to a
   `production/` profile asks a human to type the profile name, and the skill treats that prompt

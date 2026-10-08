@@ -78,7 +78,8 @@ answer.** The kinds a package carries have grown more than once. The schema is t
 statement of the shape that is current by construction.
 
 The environment also publishes an OpenAPI document of its whole API at
-`/apiv1/openapi.json`, and the `tabia-cli` skill covers fetching and querying it. **For the file itself, the package
+`/apiv1/openapi.json`, and the `tabia-cli` skill covers reading it one endpoint at a time with
+`tabia api <path> --describe`. **For the file itself, the package
 schema is the authority**, because it is generated from the code that reads packages. The
 OpenAPI document covers what surrounds the package: the operation that publishes a flow that
 arrived as a draft, or the endpoints that answer what a placeholder should point at. Each
