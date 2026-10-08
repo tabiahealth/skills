@@ -134,8 +134,8 @@ importing points each placeholder at something real. `tabia plan` lists them off
 A **care pathway** is never dragged in by being referenced — one pathway mentioning
 another leaves a placeholder, because packaging it would drag in a second care line
 nobody asked for. A **program** is never dragged in either: a pathway's program stays a
-placeholder unless the program is itself an item, and then the pathway belongs inside it. Flows, surveys, message templates, message channels, funnels and form templates are the opposite: naming one
-anywhere pulls it into the file. A funnel is pulled in only if it is published and has
+placeholder unless the program is itself an item, and then the pathway belongs inside it. Flows, surveys, message templates, message channels, the working hours schedules those channels
+select, funnels and form templates are the opposite: naming one anywhere pulls it into the file. A funnel is pulled in only if it is published and has
 a live step; any other funnel stays a placeholder. A form template is pulled in only if it is
 not archived; an archived one stays a placeholder. An export whose every chosen item stays out is
 refused rather than written empty.
@@ -179,7 +179,25 @@ only it refers to needs no mapping, though a survey, template or channel it drag
 is still created as a copy. When authoring for an organization that already has content,
 choose names that will not collide, so nobody has to make that choice on import.
 
-Nothing constrains a pathway's, a program's or a survey's name.
+Nothing constrains a pathway's, a program's, a survey's or a working hours schedule's name.
+
+### A channel's working hours schedule travels with it
+
+A `MESSAGE_CHANNEL` item names the schedule it selected in `workingHoursSchedule`, a placeholder of
+type `WorkingHoursSchedule`, and the schedule travels as a `WORKING_HOURS_SCHEDULE` item: its `name`,
+its `workingHours` per ISO weekday, its `quietHours` (at most one period per weekday; an end not after
+its begin runs into the next day) and `quietOnHolidays`. A schedule needs business hours on some
+weekday unless it carries quiet hours. A channel that leaves `workingHoursSchedule` out follows the
+organization's default, and an imported schedule never becomes the default.
+
+Since nothing constrains a schedule's name, no clash ever asks the question, so the wizard asks it
+for every schedule: create it from the file, or use one the organization already has. With the CLI,
+using an existing one is a resolution for the schedule item's own ref under `WorkingHoursSchedule`
+in the map. That is the user's call, so ask rather than pick.
+
+A channel written with `quietHoursStart` and `quietHoursEnd` and no `workingHoursSchedule`, the shape
+of a file exported before the quiet window moved onto the schedule, still imports: it gets a schedule
+with no business hours holding that window on every weekday. Do not author new files that way.
 
 ### A survey's question ids must be absent
 
@@ -200,6 +218,7 @@ Importing is not publishing. Say this to the user rather than letting them disco
 | funnel | **an unpublished draft** — publish it before a flow can start it or conclude a step of it |
 | program | **a new program**, with the care pathways it carries created inside it as pathways arrive |
 | form template | **created whole**, never reused — on a name the organization already uses the import stops, and the operator picks a new name with `--rename` |
+| working hours schedule | as exported, never as the organization's default |
 
 The message template's integration is asked for at import, because it decides what kind of
 template is created. The channel's is not asked for and is left empty — an organization
