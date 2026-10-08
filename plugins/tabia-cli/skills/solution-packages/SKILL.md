@@ -153,8 +153,9 @@ to the pathway it creates. Picking a program on the export screen, or with `tabi
 --program`, picks its pathways that are not archived along with it.
 
 A pathway item on its own cannot land in a program of the same file: its `program` is read when
-the pathway is created, before any item exists, so only the map can answer it. Put the pathway
-inside the program instead. Pointing the program item at one the organization already has creates
+the pathway is created, before any item exists, so only the resolution map can answer it: the one
+the person fills in the import wizard, or that `tabia resolve` writes and `tabia import --map`
+sends. Put the pathway inside the program instead. Pointing the program item at one the organization already has creates
 neither the program nor its pathways, so what points at those pathways needs a mapping again.
 
 ### Dependencies may be circular
