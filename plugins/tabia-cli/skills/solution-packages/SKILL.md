@@ -2,7 +2,7 @@
 name: solution-packages
 description: >
   How to build a solution as a package file — a care pathway with the flows,
-  surveys, message templates and channels it needs — rather than only moving one
+  surveys, message templates and message channels it needs — rather than only moving one
   that already exists. Covers asking the platform for the format instead of
   guessing it, the rules a schema cannot express, and what each kind arrives as
   once imported. Use this skill when the user wants to create or edit a solution
@@ -133,7 +133,7 @@ importing points each placeholder at something real. `tabia plan` lists them off
 
 A **care pathway** is never dragged in by being referenced — one pathway mentioning
 another leaves a placeholder, because packaging it would drag in a second care line
-nobody asked for. Flows, surveys, message templates, channels, funnels and form templates are the opposite: naming one
+nobody asked for. Flows, surveys, message templates, message channels, funnels and form templates are the opposite: naming one
 anywhere pulls it into the file. A funnel is pulled in only if it is published and has
 a live step; any other funnel stays a placeholder. A form template is pulled in only if it is
 not archived; an archived one stays a placeholder. An export whose every chosen item stays out is
