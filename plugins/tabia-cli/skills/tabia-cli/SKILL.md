@@ -464,11 +464,12 @@ tabia --user-agent claude-code api /pathway/42 --describe               # every 
 - Its paths are relative to `/apiv1`, which is the form `tabia api` takes, so a path copied out of
   it works as it is. It never shows an `operationId` — see below.
 
-**If `--describe` is not recognised**, the installed copy predates it: re-run the installer
+**If `--endpoints` or `--describe` is not recognised**, the installed copy predates them: re-run the installer
 ([Install and upgrade](#install-and-upgrade)). Only if it is still missing, fetch the document once
 into the work directory and query the file — never print it, and never fetch it again per question:
 
 ```bash
+work=${work:-$(mktemp -d)}
 spec="$work/openapi.json"
 tabia --user-agent claude-code api /openapi.json > "$spec"
 jq '.paths["/pathway/{id}"].put.requestBody.content["application/json"].schema' "$spec"
