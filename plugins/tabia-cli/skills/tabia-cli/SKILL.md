@@ -561,7 +561,9 @@ import into the wrong organization is the failure mode this naming exists to pre
 Flows, surveys, message templates, message channels, funnels and form templates are carried: naming one
 anywhere in the file pulls it in. `export` takes `--pathway`, `--flow`, `--funnel` and `--form-template`, each
 repeatable, so a funnel or a form template can also travel on its own. A form template is never pointed at
-an existing one: on a name clash, rename it. A *referenced* pathway is not — it stays a reference for the person
+an existing one: on a name clash the import stops and lists it, and the CLI never invents a name. Ask the
+person for the new name and pass it as `--rename <ref>=<name>`; a map that points the item at the existing
+template is refused by the server. A *referenced* pathway is not — it stays a reference for the person
 importing to resolve, so that packaging one care line never drags in a second.
 
 A pathway flow node's `data.flow` is never placeholdered, so that flow is not discovered.
