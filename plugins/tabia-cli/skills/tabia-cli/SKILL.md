@@ -360,6 +360,17 @@ script of yours that calls `tabia` starts with:
 export TABIA_USER_AGENT=claude-code    # your own label from the table above
 ```
 
+**A script that already exists gets the same check before it runs again.** A script written
+in an earlier session, or one the user saved, may predate the table above. It may export a
+label of its own, usually the name of its task, or none at all, and every run sends that
+label again. So before running any script that calls `tabia`, read what it sets
+`TABIA_USER_AGENT` to. If the value is not your own label from the table, or the line is
+missing, fix that one line before the run and tell the user what you changed: the file is
+theirs, and the change affects only attribution. A value inherited from the shell needs the
+same care. Your explicit `--user-agent` beats it on every command you type, but a script
+reads the environment, so a script that sets nothing of its own runs as
+`TABIA_USER_AGENT=claude-code ./script.sh`.
+
 **A copy that rejects the flag predates it — re-run the installer rather than dropping
 it.** Passing it after the subcommand fails legibly (`error: unrecognized arguments:
 --user-agent claude-code`); passing it before, in the form above, does not — the parser
