@@ -3,11 +3,11 @@ name: tabia-cli
 description: >
   How to reach a Tabia environment (staging, production, a particular
   organization) from the command line with the `tabia` CLI — list, export, plan,
-  resolve and import care pathways, flows, surveys and funnels, and call any `/apiv1`
+  resolve and import care pathways, programs, flows, surveys and funnels, and call any `/apiv1`
   endpoint with `tabia api`, learning its paths and payloads from the
   environment's own OpenAPI document. Use this skill when the user asks to
   inspect or change something in a deployed Tabia environment, to move a
-  pathway, flow, survey or funnel between environments or organizations, or
+  pathway, program, flow, survey or funnel between environments or organizations, or
   mentions `tabia`, `tabia auth`, profiles, personal access tokens (PAT),
   solution packages, or asks which endpoint does something or what it expects.
   Also for creating and explaining solutions: drawing what a pathway or package
@@ -22,7 +22,7 @@ description: >
 
 `tabia` is a standalone Python CLI that talks to a deployed Tabia platform over HTTP,
 authenticated with the current user's **personal access token**. It moves care
-pathways, flows, surveys and funnels between environments as a single JSON package, and reaches
+pathways, programs, flows, surveys and funnels between environments as a single JSON package, and reaches
 any other endpoint through `tabia api`.
 
 If it is not on this machine yet, **installing it is your first step** rather than
@@ -410,13 +410,13 @@ cannot make a call, say so and stop there, rather than reaching for the token.
 ## Reading an environment
 
 ```bash
-tabia ls pathway --search diabetes      # also: flow, survey, funnel. --json for machine output
+tabia ls pathway --search diabetes      # also: flow, survey, funnel, form-template, program. --json for machine output
 tabia api /currency                     # declared free of personal data: goes through
 tabia api /me --personal-data           # not declared — most endpoints are not
 tabia api '/pathway?size=5' --personal-data -q '.content[].name'
 ```
 
-`tabia api` is the escape hatch for everything outside pathways, flows, surveys and funnels,
+`tabia api` is the escape hatch for everything outside pathways, programs, flows, surveys and funnels,
 and [the environment's OpenAPI document](#finding-the-endpoint-ask-the-environment-not-your-memory)
 is where its paths and bodies come from. The path is under `/apiv1`, the response body
 goes to stdout (pretty JSON) and everything else to stderr, so `| jq` works unflagged.
@@ -564,12 +564,16 @@ import into the wrong organization is the failure mode this naming exists to pre
 
 ### What the package carries, and what it does not
 
-Flows, surveys, message templates, message channels and funnels are carried: naming one
-anywhere in the file pulls it in. `export` takes `--pathway`, `--flow` and `--funnel`, each
-repeatable, so a funnel can also travel on its own. A *referenced* pathway is not — it stays a reference for the person
+Flows, surveys, message templates, message channels, funnels and form templates are carried: naming one
+anywhere in the file pulls it in. `export` takes `--pathway`, `--flow`, `--funnel`, `--form-template` and
+`--program`, each repeatable, so a funnel or a form template can also travel on its own. A form template is never pointed at
+an existing one: on a name clash the import stops and lists it, and the CLI never invents a name. Ask the
+person for the new name and pass it as `--rename <ref>=<name>`; a map that points the item at the existing
+template is refused by the server. A *referenced* pathway is not — it stays a reference for the person
 importing to resolve, so that packaging one care line never drags in a second.
 
-A pathway flow node's `data.flow` is never placeholdered, so that flow is not discovered.
+A pathway flow node's `data.flow` and `data.channel` become placeholders and are carried, so the
+flow and the channel the node points at travel with the pathway.
 Credentials never travel: a template is asked which integration to use, and a channel
 arrives with none. No patient data of any kind.
 
@@ -585,6 +589,14 @@ Funnels come with two limits worth saying before the write, not after it fails:
 - A funnel whose name the target already uses is **refused before the write**, and the dry
   run says which. Rename it or point the package at the existing one, as described above,
   and let the user make that call.
+
+A **program** travels with its care pathways inside it: `export --program <id>` brings the
+program with every one of its pathways that is not archived, and `tabia ls program` lists the
+programs that are not archived. The rest of the package points at those pathways by the ref each
+carries, so `plan` does not ask about them. Pointing the program at one the target already has
+creates neither it nor its pathways, and their references become questions to resolve again;
+nothing constrains a program's name, so that is never forced by a clash. Say so and let the user
+choose.
 
 To write a package rather than move one, see the `solution-packages` skill.
 
