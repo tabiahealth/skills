@@ -28,6 +28,8 @@ Update later with:
 /plugin marketplace update tabia-skills
 ```
 
+Every change merged to `main` counts as an update; see [Versions](#versions).
+
 #### Team-wide (optional)
 
 To have Claude Code offer this marketplace to everyone who opens a given project, add to that
@@ -80,7 +82,7 @@ runs them — Claude Code, Antigravity or another. Two run through everything he
 ## Adding a new plugin
 
 1. `plugins/<name>/.claude-plugin/plugin.json` — the Claude Code manifest (`name`,
-   `description`, `version`, `author`, `homepage`).
+   `description`, `author`, `homepage`). Leave `version` out; see [Versions](#versions).
 2. `plugins/<name>/plugin.json` — the Antigravity manifest (`$schema`, `name`,
    `description`). Keep its `name` and `description` identical to the Claude Code manifest's;
    when you change one, change the other.
@@ -91,6 +93,16 @@ runs them — Claude Code, Antigravity or another. Two run through everything he
    short `description`). Antigravity installs from the folder itself, so there is nothing to
    register for it.
 6. Open a PR.
+
+### Versions
+
+The plugins here carry no `version`, on purpose, in either `plugin.json` or
+`marketplace.json`. Without one, Claude Code versions a plugin by the commit SHA it was
+installed from, so every merge to `main` reaches users as an update. Don't add a `version`
+field: a pinned version keeps users on their cached copy until someone bumps it, and bumping it
+by hand in every PR makes parallel PRs collide. See Claude Code's
+[Versions and updates](https://code.claude.com/docs/en/plugins/loading#versions-and-updates).
+`claude plugin validate` warns that `version` is missing; that warning is expected.
 
 **This repository is public.** Anything merged here is published: keep internal-only hostnames,
 internal issue numbers, private repository paths and internal product code names out of it, and
