@@ -558,8 +558,8 @@ import into the wrong organization is the failure mode this naming exists to pre
 
 ### What the package carries, and what it does not
 
-Flows, surveys, message templates, message channels, funnels and form templates are carried: naming one
-anywhere in the file pulls it in. `export` takes `--pathway`, `--flow`, `--funnel`, `--form-template` and
+Flows, surveys, message templates, message channels, the working hours schedules those channels
+select, funnels and form templates are carried: naming one anywhere in the file pulls it in. `export` takes `--pathway`, `--flow`, `--funnel`, `--form-template` and
 `--program`, each repeatable, so a funnel or a form template can also travel on its own. A form template is never pointed at
 an existing one: on a name clash the import stops and lists it, and the CLI never invents a name. Ask the
 person for the new name and pass it as `--rename <ref>=<name>`; a map that points the item at the existing
@@ -570,6 +570,11 @@ A pathway flow node's `data.flow` and `data.channel` become placeholders and are
 flow and the channel the node points at travel with the pathway.
 Credentials never travel: a template is asked which integration to use, and a channel
 arrives with none. No patient data of any kind.
+
+A working hours schedule is created in the target unless the map points it at one the target
+already has, with a resolution for the schedule item's own ref under `WorkingHoursSchedule`.
+Nothing constrains a schedule's name, so no clash ever forces that choice: ask the user. An
+imported schedule never becomes the target's default.
 
 Funnels come with two limits worth saying before the write, not after it fails:
 
