@@ -2,7 +2,7 @@
 name: solution-packages
 description: >
   How to build a solution as a package file — a care pathway, or a program with its
-  care pathways, with the flows, surveys, message templates and channels it needs — rather than only moving one
+  care pathways, with the flows, surveys, message templates and message channels it needs — rather than only moving one
   that already exists. Covers asking the platform for the format instead of
   guessing it, the rules a schema cannot express, and what each kind arrives as
   once imported. Use this skill when the user wants to create or edit a solution
@@ -134,9 +134,10 @@ importing points each placeholder at something real. `tabia plan` lists them off
 A **care pathway** is never dragged in by being referenced — one pathway mentioning
 another leaves a placeholder, because packaging it would drag in a second care line
 nobody asked for. A **program** is never dragged in either: a pathway's program stays a
-placeholder unless the program is itself an item, and then the pathway belongs inside it. Flows, surveys, message templates, channels and funnels are the opposite: naming one
+placeholder unless the program is itself an item, and then the pathway belongs inside it. Flows, surveys, message templates, message channels, funnels and form templates are the opposite: naming one
 anywhere pulls it into the file. A funnel is pulled in only if it is published and has
-a live step; any other stays a placeholder. An export whose every chosen item stays out is
+a live step; any other funnel stays a placeholder. A form template is pulled in only if it is
+not archived; an archived one stays a placeholder. An export whose every chosen item stays out is
 refused rather than written empty.
 
 The practical consequence when authoring: a flow your pathway starts belongs **in** the
@@ -198,6 +199,7 @@ Importing is not publishing. Say this to the user rather than letting them disco
 | message channel | **without its integration**, so it carries no credential and sends nothing until one is attached |
 | funnel | **an unpublished draft** — publish it before a flow can start it or conclude a step of it |
 | program | **a new program**, with the care pathways it carries created inside it as pathways arrive |
+| form template | **created whole**, never reused — on a name the organization already uses the import stops, and the operator picks a new name with `--rename` |
 
 The message template's integration is asked for at import, because it decides what kind of
 template is created. The channel's is not asked for and is left empty — an organization

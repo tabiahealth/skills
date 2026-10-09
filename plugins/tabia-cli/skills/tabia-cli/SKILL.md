@@ -410,7 +410,7 @@ cannot make a call, say so and stop there, rather than reaching for the token.
 ## Reading an environment
 
 ```bash
-tabia ls pathway --search diabetes      # also: flow, survey, funnel, program. --json for machine output
+tabia ls pathway --search diabetes      # also: flow, survey, funnel, form-template, program. --json for machine output
 tabia api /currency                     # declared free of personal data: goes through
 tabia api /me --personal-data           # not declared — most endpoints are not
 tabia api '/pathway?size=5' --personal-data -q '.content[].name'
@@ -558,9 +558,12 @@ import into the wrong organization is the failure mode this naming exists to pre
 
 ### What the package carries, and what it does not
 
-Flows, surveys, message templates, message channels and funnels are carried: naming one
-anywhere in the file pulls it in. `export` takes `--pathway`, `--flow`, `--funnel` and
-`--program`, each repeatable, so a funnel can also travel on its own. A *referenced* pathway is not — it stays a reference for the person
+Flows, surveys, message templates, message channels, funnels and form templates are carried: naming one
+anywhere in the file pulls it in. `export` takes `--pathway`, `--flow`, `--funnel`, `--form-template` and
+`--program`, each repeatable, so a funnel or a form template can also travel on its own. A form template is never pointed at
+an existing one: on a name clash the import stops and lists it, and the CLI never invents a name. Ask the
+person for the new name and pass it as `--rename <ref>=<name>`; a map that points the item at the existing
+template is refused by the server. A *referenced* pathway is not — it stays a reference for the person
 importing to resolve, so that packaging one care line never drags in a second.
 
 A pathway flow node's `data.flow` and `data.channel` become placeholders and are carried, so the
