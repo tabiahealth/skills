@@ -674,7 +674,7 @@ the rules above say.
    stdin, so `echo production/acme | tabia import … --write` is refused the same way;
    an older CLI reads it happily from a pipe, and doing so is exactly as forbidden, along
    with a heredoc, a `printf`, a pseudo-terminal or an expect script. In Claude Code, the
-   plugin's hook blocks any `tabia` command carrying `--yes` before it runs; meeting that
+   plugin's hook blocks any `tabia` command carrying `--yes`, or an abbreviation of it, before it runs; meeting that
    block is the rule being applied, not a hurdle to route around. Where your commands run in a terminal
    that stays open, the prompt waits instead of aborting, and typing the name into it —
    through a tool that sends input to a running command, or any other way — is the same

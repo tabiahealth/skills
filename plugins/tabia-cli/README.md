@@ -38,7 +38,7 @@ and expensive when you do:
   as the authorization rather than an obstacle — it prepares and dry-runs the whole transfer, then
   hands over the command the dry run printed, whose `--expect <digest>` makes the CLI refuse if
   anything changed since you read it. In Claude Code, a hook shipped with the plugin blocks any
-  `tabia` command carrying `--yes`, the flag that skips that prompt.
+  `tabia` command carrying `--yes` (or an abbreviation such as `--y`), the flag that skips that prompt.
 - **The failure modes, named.** A disabled "Create token" button, a `403` that means narrow roles
   rather than a bad token, an `EOFError` that is the guard working, a `404` from an environment
   that predates the solution-package endpoints, a missing keyring.

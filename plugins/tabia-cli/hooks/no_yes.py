@@ -18,6 +18,11 @@ SEPARATORS = set("();<>|&\n")
 # Words that run the command after them, so the command position moves past them.
 PREFIXES = {"command", "exec", "env", "nohup", "time", "sudo", "xargs"}
 SHELLS = {"sh", "bash", "zsh", "dash"}
+# `python3 ./tabia …` runs the CLI too: the script is the first word after the interpreter's options.
+INTERPRETERS = re.compile(r"(python|pypy)[0-9.]*")
+INTERPRETER_OPTIONS_WITH_VALUE = {"-W", "-X"}
+# argparse takes any unambiguous prefix of a long option, so `--y` and `--ye` mean `--yes`.
+YES_SPELLINGS = {"--y", "--ye", "--yes"}
 # `$(…)` and `…`, which a shell runs as command lines of their own even inside double quotes.
 SUBSTITUTIONS = re.compile(r"\$\(([^()]*)\)|`([^`]*)`")
 
@@ -44,6 +49,15 @@ def segments(words: list) -> list:
     return found + [current]
 
 
+def script_and_arguments(words: list) -> list:
+    """What follows an interpreter's own options: the script it runs, then that script's arguments."""
+    while words and words[0].startswith("-"):
+        if words[0] in ("-", "-c", "-m"):     # stdin, inline code or a module: no script file
+            return []
+        words = words[2:] if words[0] in INTERPRETER_OPTIONS_WITH_VALUE else words[1:]
+    return words
+
+
 def passes_yes(command: str, depth: int = 0) -> bool:
     if depth < 3 and any(passes_yes(inner, depth + 1)
                          for match in SUBSTITUTIONS.finditer(command)
@@ -56,7 +70,11 @@ def passes_yes(command: str, depth: int = 0) -> bool:
         if not words:
             continue
         program = os.path.basename(words[0])
-        if program == "tabia" and "--yes" in words[1:]:
+        if INTERPRETERS.fullmatch(program):
+            script = script_and_arguments(words[1:])
+            if script and os.path.basename(script[0]) == "tabia" and YES_SPELLINGS & set(script[1:]):
+                return True
+        if program == "tabia" and YES_SPELLINGS & set(words[1:]):
             return True
         # `bash -c "tabia … --yes"` runs a command line of its own.
         if program in SHELLS and "-c" in words[1:-1] and depth < 3:
