@@ -36,7 +36,9 @@ and expensive when you do:
   sends only a read-only validation request, and the skill fixes what it reports); a write to a
   `production/` profile asks a human to type the profile name, and the skill treats that prompt
   as the authorization rather than an obstacle — it prepares and dry-runs the whole transfer, then
-  hands over one command for you to run.
+  hands over the command the dry run printed, whose `--expect <digest>` makes the CLI refuse if
+  anything changed since you read it. In Claude Code, a hook shipped with the plugin blocks any
+  `tabia` command carrying `--yes` (or an abbreviation such as `--y`), the flag that skips that prompt.
 - **The failure modes, named.** A disabled "Create token" button, a `403` that means narrow roles
   rather than a bad token, an `EOFError` that is the guard working, a `404` from an environment
   that predates the solution-package endpoints, a missing keyring.

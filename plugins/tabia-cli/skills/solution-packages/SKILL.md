@@ -299,7 +299,7 @@ Once the file is written, the sequence is the `tabia-cli` skill's, unchanged:
 tabia --user-agent claude-code plan "$work/solution.json"            # offline: creates vs needs
 tabia --user-agent claude-code resolve "$work/solution.json" --profile staging/acme -o "$work/map.json"
 tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme          # dry run: validated, not written
-tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme --write
+tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme --write --expect <digest>   # the line the dry run printed
 ```
 
 `plan` is offline and is the cheapest check on a hand-written file: it reads the items,
@@ -373,6 +373,8 @@ exercised nowhere, and a care pathway drives automation that speaks to patients.
    See [The dry run asks the target](#the-dry-run-asks-the-target).
 3. **Confirm with the user before any write.** Approval for one is not approval for the
    next.
-4. **Never pass `--yes`.** It skips the production confirmation, which exists for this.
+4. **Never pass `--yes`.** It skips the production confirmation, which exists for this. In
+   Claude Code the plugin's hook blocks it. Write with the `--expect <digest>` line the dry
+   run printed, so the write is the one the user saw.
 5. **Say what will arrive unpublished** — the flows, and any template awaiting approval —
    so nobody believes a solution is live when it is installed.
