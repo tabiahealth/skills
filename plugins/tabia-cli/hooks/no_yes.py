@@ -28,6 +28,9 @@ SUBSTITUTIONS = re.compile(r"\$\(([^()]*)\)|`([^`]*)`")
 
 
 def tokens(command: str) -> list:
+    # shlex has no line continuation: a backslash-newline would come out as a separator,
+    # while the shell joins the two lines into one command.
+    command = re.sub(r"\\\n", " ", command)
     lexer = shlex.shlex(command, posix=True, punctuation_chars="();<>|&\n")
     lexer.whitespace = " \t\r"
     lexer.whitespace_split = True
