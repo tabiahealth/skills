@@ -78,7 +78,9 @@ answer.** The kinds a package carries have grown more than once. The schema is t
 statement of the shape that is current by construction.
 
 The environment also publishes an OpenAPI document of its whole API at
-`/apiv1/openapi.json`, and the `tabia-cli` skill covers fetching and querying it. **For the file itself, the package
+`GET /apiv1/openapi.json` — `tabia api /openapi.json`, since `tabia api` paths are already under
+`/apiv1` — and the `tabia-cli` skill covers reading it one endpoint at a time with
+`tabia api <path> --describe`. **For the file itself, the package
 schema is the authority**, because it is generated from the code that reads packages. The
 OpenAPI document covers what surrounds the package: the operation that publishes a flow that
 arrived as a draft, or the endpoints that answer what a placeholder should point at. Each
@@ -318,7 +320,7 @@ Once the file is written, the sequence is the `tabia-cli` skill's, unchanged:
 tabia --user-agent claude-code plan "$work/solution.json"            # offline: creates vs needs
 tabia --user-agent claude-code resolve "$work/solution.json" --profile staging/acme -o "$work/map.json"
 tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme          # dry run: validated, not written
-tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme --write
+tabia --user-agent claude-code import "$work/solution.json" --map "$work/map.json" --profile staging/acme --write --expect <digest>   # the line the dry run printed
 ```
 
 `plan` is offline and is the cheapest check on a hand-written file: it reads the items,
@@ -392,6 +394,8 @@ exercised nowhere, and a care pathway drives automation that speaks to patients.
    See [The dry run asks the target](#the-dry-run-asks-the-target).
 3. **Confirm with the user before any write.** Approval for one is not approval for the
    next.
-4. **Never pass `--yes`.** It skips the production confirmation, which exists for this.
+4. **Never pass `--yes`.** It skips the production confirmation, which exists for this. In
+   Claude Code the plugin's hook blocks it. Write with the `--expect <digest>` line the dry
+   run printed, so the write is the one the user saw.
 5. **Say what will arrive unpublished** — the flows, and any template awaiting approval —
    so nobody believes a solution is live when it is installed.

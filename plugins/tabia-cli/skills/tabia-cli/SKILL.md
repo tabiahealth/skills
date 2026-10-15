@@ -5,7 +5,8 @@ description: >
   organization) from the command line with the `tabia` CLI — list, export, plan,
   resolve and import care pathways, programs, flows, surveys and funnels, and call any `/apiv1`
   endpoint with `tabia api`, learning its paths and payloads from the
-  environment's own OpenAPI document. Use this skill when the user asks to
+  environment's own OpenAPI document one endpoint at a time with
+  `tabia api <path> --describe`. Use this skill when the user asks to
   inspect or change something in a deployed Tabia environment, to move a
   pathway, program, flow, survey or funnel between environments or organizations, or
   mentions `tabia`, `tabia auth`, profiles, personal access tokens (PAT),
@@ -440,38 +441,57 @@ this document is where the path, the method, the parameters and the body come fr
 paths and payloads recalled from memory are not a source. Neither is a source checkout,
 which may not match the version that environment is running.
 
-It is about a megabyte, over a thousand paths. **Fetch it once into the work directory and
-query the file**, rather than printing it or fetching it again for each question:
+It is a couple of megabytes, over a thousand paths — far too much to load into a conversation to
+write one call. **Ask the CLI for the slice instead of fetching the document:**
+
+```bash
+tabia --user-agent claude-code api pathway --endpoints                   # operations that mention it
+tabia --user-agent claude-code api /pathway/42 -X POST --describe --json # what that call takes and answers
+tabia --user-agent claude-code api /pathway/42 --describe                # every method on that path, as text
+```
+
+- `--endpoints` matches the word against each operation's path, summary and tags, ignoring case,
+  and lists method, path and summary — the way to find the endpoint when you do not know it.
+- `--describe` takes the line you are about to run: a concrete path (`/pathway/42`) or a
+  template (`/pathway/{id}`), with `-X` for the method, or every method without it (a body flag
+  on the line means `POST`, as for the call). A literal segment beats a `{parameter}`, as the
+  server routes it. It prints the parameters, the request body with its `$ref`s inlined two deep,
+  and one level of each response; a schema name printed in place of a shape is where it stopped —
+  `--depth 3` goes one further. Nothing is sent to the endpoint itself.
+- Each operation says whether the gate will ask: `declaredFreeOfPersonalData` is `true`, `false`,
+  or `null` when the declared list could not be read (`declaredListError` says why). Neither
+  command needs `--personal-data`.
+- Its paths are relative to `/apiv1`, which is the form `tabia api` takes, so a path copied out of
+  it works as it is. It never shows an `operationId` — see below.
+
+**If `--endpoints` or `--describe` is not recognised**, the installed copy predates them: re-run the installer
+([Install and upgrade](#install-and-upgrade)). Only if it is still missing, fetch the document once
+into the work directory and query the file — never print it, and never fetch it again per question:
 
 ```bash
 work=${work:-$(mktemp -d)}
 spec="$work/openapi.json"
 tabia --user-agent claude-code api /openapi.json > "$spec"
-
-# which operations mention pathways — method, path, summary
-jq -r '.paths | to_entries[] | .key as $path | .value | to_entries[]
-       | "\(.key | ascii_upcase) \($path)  \(.value.summary // "")"' "$spec" | grep -i pathway
-
-jq '.paths["/pathway"] | keys' "$spec"                                   # its methods
-jq '.paths["/pathway"].get.parameters | map(.name)' "$spec"              # page/size → --paginate applies
-jq '.paths["/pathway"].post.requestBody.content["application/json"].schema' "$spec"
+jq '.paths["/pathway/{id}"].post.requestBody.content["application/json"].schema' "$spec"
 jq '.components.schemas["<Name>"]' "$spec"                               # follow a $ref by hand
 ```
-
-Its paths are relative to `/apiv1` (`servers` says so), which is the form `tabia api`
-takes, so a path copied out of the document works as it is. A `$ref` reads
-`#/components/schemas/<Name>` and resolves inside the same file. The file describes the API,
-not anyone's data, and it goes in the same throwaway directory as everything else.
 
 What the document is, and what it is not:
 
 - **It is what this environment accepts.** Read it from the environment you are about to
   call. Staging and production can run different versions, so a document fetched from one
   says nothing reliable about the other.
-- **Before a non-`GET` `tabia api`, read the operation's request body schema.** `import`
+- **Before a non-`GET` `tabia api`, describe it and read the request body schema.** `import`
   has a dry run and `tabia api` does not: a `POST`, `PUT` or `DELETE` is sent the moment
   it runs. So checking the body against the schema is the only check before the call
   lands, and the confirmation under [Writes](#writes-the-rules) still applies after it.
+- **Read each field's `description`, not only `required`.** An update can take the whole
+  object, and a field left out is not always left alone: on `POST /pathway/{id}`, `icds` or
+  `journeys` absent means removed, and `endDateExplanation` absent becomes `null`. The
+  descriptions say which fields are replaced and which are kept. To change one field, `GET` the
+  object, change that field, and send the whole thing back.
+- **Do not assume the method.** Updates here are often `POST /<resource>/{id}`, not `PUT`;
+  `--describe` without `-X` lists the methods a path has.
 - **It is not a permission list.** It lists operations whatever the token's roles, so a
   `403` on an operation it lists still means [roles too narrow](#troubleshooting).
 - **It is not the personal-data list either.** `/no-personal-data-endpoints` alone decides
@@ -490,6 +510,47 @@ What the document is, and what it is not:
 If the call answers `404`, the environment predates the document. Say so, and fall back to
 `ls` and the paths the user already knows.
 
+## Reading results: `--json`
+
+**When you read what a command says, add `--json`** — `plan`, `resolve`, `import` (dry run and
+`--write`), `validate`, `diff`, `ls`, `token list`, `auth status`, `auth list` and
+`api --describe`/`--endpoints` all take it. Parse the document, not the text: the text is for
+people and gets reworded, and it costs more context for the same facts.
+
+- **stdout is the document and nothing else**; notes and warnings go to stderr. A command that
+  fails outright prints `error: …` on stderr and nothing on stdout, so a document on stdout means
+  the run completed.
+- **Read the exit code too** — it is the same with or without `--json`. `resolve` exits 1 while
+  any reference is outstanding; a dry-run `import` while the target would refuse; `validate` 1 for
+  errors in the file and 2 when the target could not be asked; `diff` 1 for a difference and 2
+  when it could not compare. The CLI's README lists every command's codes and every field.
+- `resolve --json`: each reference has a `status` — `MATCHED`, `AMBIGUOUS`, `NOT FOUND`,
+  `FORBIDDEN` (with the `resource` the token may not list) or `UNSUPPORTED`. An `AMBIGUOUS` one
+  carries `candidates`, each already in the map file's shape, `{"reference": <id>, "display":
+  "..."}`. **Show the user the candidates and let them pick**, then write the one they picked
+  into `map.json` under its type and ref. Never choose between two entities of the same name
+  yourself.
+- `import --json`: `target` (profile, host, production, organization, acting user), `create`,
+  `adopt`, `collisions` (`null` when the target cannot check names — not the same as none taken),
+  `validation` (`importable` and `issues`, or `null` when it cannot validate), `importable`,
+  `digest` (the plan digest the text dry run prints), `writeCommand` (the exact
+  `--write --expect <digest>` line to hand over, or `null` when the target would refuse or this
+  was the write), and after a write `created` and `reused`. Read the banner back to the user from
+  `target`, as you would from the text, and hand over `writeCommand` as it stands.
+- `plan --json`: what it creates, and `external` grouped by placeholder type, each with
+  `resolvable` and its refs; `offline` says whether the target was asked.
+- `auth status --json` and `auth list --json` say which organization each profile reaches and
+  whether its token answers — check them before a cross-profile step. `auth status` exits 0 only
+  when the token answered; in `auth list`, a non-`null` `error` is the profile whose token did not.
+  `active` only says whether that profile is the one selected with `auth use`, not whether its
+  token works. `token.listed: false` means the token authenticated but is not among the acting
+  user's own tokens.
+- **A command you hand to the user for their own terminal goes without `--json`**; the text is
+  written for them.
+
+On a copy that rejects `--json` on one of these commands, re-run the installer; until then, read
+the text.
+
 ## Moving a solution between environments
 
 The middle three — `plan`, `resolve` and the dry-run `import` — are why the CLI beats the
@@ -504,7 +565,7 @@ tabia export --pathway 42 -o "$work/diabetes.json"                  # 2. flows, 
 tabia plan "$work/diabetes.json"                                    # 3. offline: creates vs needs
 tabia resolve "$work/diabetes.json" --profile production/acme -o "$work/map.json"
 tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme          # dry run: validated, not written
-tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme --write
+tabia import "$work/diabetes.json" --map "$work/map.json" --profile production/acme --write --expect <digest>   # the line the dry run printed
 ```
 
 **Write packages outside the working tree** — `mktemp -d`, or the session's scratchpad.
@@ -520,7 +581,9 @@ a package is the user's decision, not a default.
 - `resolve` matches those references by name against the **target** organization and
   writes `map.json` either way, exiting non-zero while anything is outstanding —
   **AMBIGUOUS**, **NOT FOUND**, **UNSUPPORTED** and **FORBIDDEN** are for a human to
-  fill in, in the map file. Do not invent an id to make it pass.
+  settle. Run it with `--json`: an AMBIGUOUS reference then comes with its candidates for the
+  user to pick from ([Reading results](#reading-results---json)). Do not invent an id to make
+  it pass.
 - `import` refuses to send while any external reference is unmapped, and names each one.
 - `import` without `--write` is the dry run, and it asks the target. It sends the package,
   the map and the renames to `POST /solution-package/validate`, which runs the checks the import runs
@@ -531,6 +594,12 @@ a package is the user's decision, not a default.
   one. A clean report is not a guarantee: it does not check that the ids in the map exist,
   and it cannot see what only the write finds out. The `solution-packages` skill covers
   reading the report to fix a file.
+- A dry run the target accepts ends with a **plan digest** and the exact command that writes
+  it, `--write --expect <digest>` (CLI 0.4.0 and later). The digest covers the file, the map,
+  the renames, the host and the organization the token reaches; `--expect` refuses, having
+  written nothing, when any of them differs from that dry run. Hand that line over as
+  printed — never one rebuilt by hand, and never with a digest copied from a later run the
+  user has not seen.
 - On an environment without that endpoint (`404`), the CLI says so and falls back to a
   dry run that is local only: banner and items, nothing sent, little proven. Say that to
   the user; `--write` is then the first time the server sees the package.
@@ -666,11 +735,15 @@ the rules above say.
    `tabia api`. Approval for one write is not approval for the next.
 3. **Never pass `--yes`.** It skips the production confirmation, which is exactly the
    prompt a human should be answering. Expect to meet this as a failure rather than as a
-   policy: a write to a `production/` profile asks for the profile name with `input()`,
-   and with no terminal in a tool call it raises `EOFError` and aborts. **That is the
-   guard working.** Nor is feeding the answer in a fix — `input()` reads happily from a
-   pipe, so `echo production/acme | tabia import … --write` is exactly as forbidden, along
-   with a heredoc, a `printf` or an expect script. Where your commands run in a terminal
+   policy: a write to a `production/` profile asks for the profile name on the terminal,
+   and with no terminal in a tool call it is refused — "no terminal here to confirm on",
+   nothing sent (a CLI older than 0.4.0 raises `EOFError` instead). **That is the guard
+   working.** Nor is feeding the answer in a fix. From 0.4.0 the question is not read from
+   stdin, so `echo production/acme | tabia import … --write` is refused the same way;
+   an older CLI reads it happily from a pipe, and doing so is exactly as forbidden, along
+   with a heredoc, a `printf`, a pseudo-terminal or an expect script. In Claude Code, the
+   plugin's hook blocks any `tabia` command carrying `--yes`, or an abbreviation of it, before it runs; meeting that
+   block is the rule being applied, not a hurdle to route around. Where your commands run in a terminal
    that stays open, the prompt waits instead of aborting, and typing the name into it —
    through a tool that sends input to a running command, or any other way — is the same
    thing again: cancel the command and hand it over. The prompt is not an obstacle between
@@ -695,8 +768,11 @@ for the missing terminal: it puts the irreversible step with the person accounta
 2. **Show the dry run**: the validation report, warnings included, and the
    org/host/acting-user banner it printed, so the user decides with the facts in front of
    them. Hand nothing over while the report says the package is not importable.
-3. **Hand over one copy-pasteable command** for their own terminal — the same one, with
-   `--write` and no `--yes`. Say that the CLI will ask them to type the profile name.
+3. **Hand over the command the dry run printed** for their own terminal —
+   `… --write --expect <digest>`, and no `--yes`. Say that the CLI will ask them to type the
+   profile name, and that `--expect` makes it refuse if anything changed since the dry run
+   they read. (A CLI older than 0.4.0 prints no digest: hand over the same command with
+   `--write` instead, and suggest upgrading.)
 4. **Verify afterwards** with read-only commands and report what actually landed rather
    than assuming it worked.
 
@@ -709,16 +785,19 @@ for the missing terminal: it puts the irreversible step with the person accounta
 | `no profile selected` | Profiles exist but none is active. Name one with `--profile`, or `tabia auth use <name>`; the CLI refuses rather than guessing. |
 | The "Create token" button is disabled | They hold no grantable role in that organization; global roles do not count. See [When the "Create token" button is disabled](#when-the-create-token-button-is-disabled). |
 | `EOFError` from `auth login`, or at a production confirmation — or either command left waiting at its prompt | No terminal in a tool call, or one that stays open and waits. The first is expected and the user runs the command themselves; the second is the guard working — report the abort, never retry with `--yes`, and never type into a waiting prompt: cancel it and hand the command over. |
+| `no terminal here to confirm on` | A production write from a tool call, on CLI 0.4.0 or later. The guard working: nothing was sent. Hand the user the command the dry run printed. |
+| `not the one the dry run showed` | `--expect` caught a change since the dry run: the file, the map, a rename, the profile or the organization it reaches. Run the dry run again and show it; never copy the new digest across without the user seeing that run. |
+| A `tabia` command blocked by a hook for `--yes` | The plugin's hook, applying rule 3 of [Writes](#writes-the-rules). Drop `--yes`; for production, hand the command over. |
 | `… may answer with data about an identifiable person` | The endpoint is not in this environment's declared-clean set — the ordinary case, not a finding. Decide before adding `--personal-data`; if the response would describe a person, rule 2 applies and the user asks. See [`--personal-data`](#--personal-data-the-gate-and-how-to-read-it). |
 | `cannot tell whether … answers with personal data` | The declared list could not be read, for the reason printed with it, so *every* call asks. Check with `tabia api /no-personal-data-endpoints`, which is exempt from the gate. |
 | `403` from `auth status` | Unknown, tampered, revoked, expired or demoted token — the auth filter answers the same for all five, deliberately, so the status call cannot tell you which. Check in the web app whether the token is still listed and whether its owner still holds the local role; the fix either way is a fresh token the user mints and logs in with. |
 | `403` on a specific endpoint, e.g. `ls pathway` | Usually not the token being rejected but its **roles being too narrow** — a `SPECIALIST` token 403s on `/pathway`, `/chatflows` and `/survey` alike. `auth status` shows what it carries; the fix is a new token with `OPERATIONAL_MANAGER`, since a token's roles cannot be edited. |
 | `auth list` shows an error in a profile's NOTE column | That token is dead; the others are fine. `production` on its own is not an error — a production profile always carries it. |
-| `404` from `tabia api /openapi.json` | The environment predates its published OpenAPI document. Everything else still works. Fall back to `ls` and the paths the user knows, and do not guess the rest. |
+| `… publishes no OpenAPI document` from `api --describe`, or `404` from `tabia api /openapi.json` | The environment predates its published OpenAPI document. Everything else still works. Fall back to `ls` and the paths the user knows, and do not guess the rest. |
 | `404 on POST /solution-package/export` (or the same on import) | The environment predates the solution-package endpoints — the CLI says so by name. `auth`, `ls`, `api` and the offline `plan` still work; the transfer does not. |
 | The dry run notes that the environment cannot validate | The target predates `/solution-package/validate`, and the dry run fell back to local only: nothing was sent and little is proven. Say so; `--write` is the first time the server sees the package. |
 | The dry run prints no validation report and no such note, or `plan` lists a template or channel both as created and as needing resolving | A stale installed copy. Re-run the installer; see [Install and upgrade](#install-and-upgrade). |
-| A subcommand or flag is not recognised | Likely an old installed copy — re-run the installer (see above); do not trust `--version`. |
+| A subcommand or flag is not recognised — `--json` on `plan`, `resolve`, `import` or `auth`, `api --describe`, `api --endpoints` | Likely an old installed copy — re-run the installer (see above); do not trust `--version`. |
 | `secret-tool is installed, but no keyring is answering it` | `secret-tool` is there but no keyring daemon runs on the D-Bus session bus, as after installing `libsecret-tools` alone on WSL. The CLI's error message prints the two commands that start a bus and a keyring; they are the user's to run, not yours. |
 | No keyring (headless box, container) | The CLI refuses rather than writing the token in the clear. `TABIA_ALLOW_PLAINTEXT_TOKENS=1` opts into a `600` file — only suggest it with the trade-off stated. The CLI creates that file itself, so do not tell anyone to create it, and the variable has to be set on every command, not only on `auth login`. |
 
