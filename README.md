@@ -80,7 +80,8 @@ runs them — Claude Code, Antigravity or another. Two run through everything he
 ## Adding a new plugin
 
 1. `plugins/<name>/.claude-plugin/plugin.json` — the Claude Code manifest (`name`,
-   `description`, `version`, `author`, `homepage`).
+   `description`, `version`, `author`, `homepage`). Set `version` once, here; after that it
+   belongs to the release PR (see below).
 2. `plugins/<name>/plugin.json` — the Antigravity manifest (`$schema`, `name`,
    `description`). Keep its `name` and `description` identical to the Claude Code manifest's;
    when you change one, change the other.
@@ -92,6 +93,18 @@ runs them — Claude Code, Antigravity or another. Two run through everything he
    register for it.
 6. Open a PR.
 
+## Releasing
+
+Claude Code delivers a plugin update only when the plugin's `version` changes, but nobody edits
+`version` by hand: a PR that changes it fails the `version-guard` check.
+
+1. Merge your change to a plugin as usual, without touching `version`.
+2. A release PR, `Release <plugin> <version>`, appears or updates itself. It bumps the minor
+   version by default and lists every PR it includes. To ask for another bump, put a
+   `release: patch` or `release: major` label on your PR; the largest one asked for wins.
+3. Merging the release PR is what ships the update to users. Until then the changes sit on
+   `main` unreleased.
+
 **This repository is public.** Anything merged here is published: keep internal-only hostnames,
 internal issue numbers, private repository paths and internal product code names out of it, and
 write for a reader who does not work at Tabia. Internal-only skills belong in the private
@@ -102,6 +115,10 @@ write for a reader who does not work at Tabia. Internal-only skills belong in th
 ```
 .claude-plugin/
   marketplace.json                  ← Claude Code marketplace catalog
+.github/
+  workflows/release-pr.yml          ← opens the release PR after a merge
+  workflows/version-guard.yml       ← keeps hand edits out of `version`
+  scripts/                          ← the shell behind both workflows
 plugins/
   tabia-cli/
     plugin.json                     ← Antigravity plugin manifest
