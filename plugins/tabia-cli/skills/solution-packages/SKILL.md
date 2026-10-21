@@ -206,6 +206,21 @@ with no business hours holding that window on every weekday. Do not author new f
 Question and choice ids are handles on rows of the organization they came from. Leave them
 out; the publisher refuses a draft carrying an id that matches none of its own rows.
 
+### A care pathway's loops expand up to its size cap
+
+A care pathway is published as an expanded graph in which every pass a loop can take is a copy
+of its steps, and the expansion stops at the pathway's `maxUnrolledNodes`: 128, 192 or 256, and
+128 when the field is absent. Nothing past that point is published and nothing reports the cut,
+so a patient who reaches it stops at the last step before it.
+
+Close every loop with a repetition step (`recurrence`, its `maxRecurrences` set to the passes
+that happen in practice, such as two missed appointments or two reschedules). A loop without
+one expands until it fills any cap, so raising `maxUnrolledNodes` does not rescue it. Raise the
+cap only when the pathway still needs more with every loop limited, and tell the user why: a
+larger graph costs every recalculation of the pathway's active plans. `validate` rejects any
+other value of `maxUnrolledNodes`, a pathway inside a program included, and `render` shows the
+cap in a pathway's heading when it is not 128.
+
 ## What each kind arrives as
 
 Importing is not publishing. Say this to the user rather than letting them discover it:
@@ -289,7 +304,8 @@ it as a pass). Fix every error at its `path` before the next round, as
 report for reading in a loop.
 
 Then **read the diagram yourself**: every flow reachable from the pathway, every branch going
-somewhere, every dashed node something the target can plausibly supply. `render` draws a
+somewhere, every dashed node something the target can plausibly supply, every loop passing
+through a *Repeat up to* node ([why](#a-care-pathways-loops-expand-up-to-its-size-cap)). `render` draws a
 transition to a card the flow does not have as a *missing card* — the validator does not check
 that, and neither does it check a survey question carrying an id from elsewhere (see
 [the rule](#a-surveys-question-ids-must-be-absent)). Repeat until `validate` exits 0 and the

@@ -683,8 +683,8 @@ tabia --user-agent claude-code validate "$work/draft.json" --profile staging/acm
 
 - **`render`** reads the file and nothing else — no profile, no server, no gate. It draws
   every item and what it refers to, a dashed node for each reference the target must
-  supply, each care pathway's graph (events, conditions, delays) and each flow's cards with
-  their branches. Names only: no ids, and a message body only as its first words. The HTML
+  supply, each care pathway's graph (events, conditions, delays, and its size cap in the
+  heading when it is not the default 128) and each flow's cards with their branches. Names only: no ids, and a message body only as its first words. The HTML
   page draws with Mermaid loaded from a CDN, in the browser; nothing of the package is sent,
   but the browser **needs network access to that CDN** to draw. Where that is blocked —
   a locked-down machine, a policy against external requests — the page still shows its
