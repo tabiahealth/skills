@@ -218,8 +218,8 @@ that happen in practice, such as two missed appointments or two reschedules). A 
 one expands until it fills any cap, so raising `maxUnrolledNodes` does not rescue it. Raise the
 cap only when the pathway still needs more with every loop limited, and tell the user why: a
 larger graph costs every recalculation of the pathway's active plans. `validate` rejects any
-other value at `/pathway/maxUnrolledNodes`, and `render` shows the cap in a pathway's heading
-when it is not 128.
+other value of `maxUnrolledNodes`, a pathway inside a program included, and `render` shows the
+cap in a pathway's heading when it is not 128.
 
 ## What each kind arrives as
 
