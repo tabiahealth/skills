@@ -658,6 +658,11 @@ Funnels come with two limits worth saying before the write, not after it fails:
   run says which. Rename it or point the package at the existing one, as described above,
   and let the user make that call.
 
+A funnel's **cohorts** travel inside it, archived ones included, and the import creates them on
+the new funnel. A flow that names a cohort is resolved by that name in the target, so a cohort
+renamed after the flow was saved arrives under a name the flow no longer holds. `validate`
+reports a cohort with no name, no color or a repeated name at `/cohorts/<index>/...`.
+
 A **program** travels with its care pathways inside it: `export --program <id>` brings the
 program with every one of its pathways that is not archived, and `tabia ls program` lists the
 programs that are not archived. The rest of the package points at those pathways by the ref each
