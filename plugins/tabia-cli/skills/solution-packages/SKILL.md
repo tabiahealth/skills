@@ -217,10 +217,19 @@ Importing is not publishing. Say this to the user rather than letting them disco
 | survey | live only if it was live where it came from |
 | message template | **pending approval** by the messaging provider; a flow that sends it fails until approved |
 | message channel | **without its integration**, so it carries no credential and sends nothing until one is attached |
-| funnel | **an unpublished draft** — publish it before a flow can start it or conclude a step of it |
+| funnel | **an unpublished draft** — publish it before a flow can start it or conclude a step of it. Its cohorts come with it, archived ones included |
 | program | **a new program**, with the care pathways it carries created inside it as pathways arrive |
 | form template | **created whole**, never reused — on a name the organization already uses the import stops, and the operator picks a new name with `--rename` |
 | working hours schedule | as exported, never as the organization's default |
+
+A funnel carries its **cohorts** inside its payload, as `cohorts`: a list of `{name, description,
+color, archived}` with no ids, in the order they were created. `color` is one of `BLUE`, `GREEN`,
+`PURPLE`, `ORANGE`, `RED`, `PINK`, `TURQUOISE` or `GRAY`. A flow that starts or searches a funnel on
+a cohort stores the cohort as `{id, name}`, and the target goes by the **name**, since the id is
+the source organization's: keep that name equal to one of the funnel's cohorts, and active, or
+the action fails when the flow runs. `validate` reports a cohort with no name, no color, or a
+name an earlier cohort of the same funnel already takes, ignoring case, at
+`/cohorts/<index>/name` or `/cohorts/<index>/color`.
 
 The message template's integration is asked for at import, because it decides what kind of
 template is created. The channel's is not asked for and is left empty — an organization
