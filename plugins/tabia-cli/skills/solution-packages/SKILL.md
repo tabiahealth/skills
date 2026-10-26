@@ -181,6 +181,12 @@ only it refers to needs no mapping, though a survey, template or channel it drag
 is still created as a copy. When authoring for an organization that already has content,
 choose names that will not collide, so nobody has to make that choice on import.
 
+A funnel pointed at the existing one brings none of the file's cohorts: the flows run against
+that funnel's cohorts, and one it lacks (or has archived, for a Start funnel) fails with
+`funnel-cohort-not-found` or `funnel-cohort-archived` only when the flow runs, since neither the
+dry run nor `validate` checks it. Before recommending that choice, compare the cohorts the
+package's flows name with the existing funnel's, and say which are missing.
+
 Nothing constrains a pathway's, a program's, a survey's or a working hours schedule's name.
 
 ### A channel's working hours schedule travels with it
@@ -226,8 +232,8 @@ A funnel carries its **cohorts** inside its payload, as `cohorts`: a list of `{n
 color, archived}` with no ids, in the order they were created. `color` is one of `BLUE`, `GREEN`,
 `PURPLE`, `ORANGE`, `RED`, `PINK`, `TURQUOISE` or `GRAY`. A flow that starts or searches a funnel on
 a cohort stores the cohort as `{id, name}`, and the target goes by the **name**, since the id is
-the source organization's: keep that name equal to one of the funnel's cohorts, and active, or
-the action fails when the flow runs. When writing a file by hand, give the cohort as `{name}` only,
+the source organization's: keep that name equal to one of the funnel's cohorts, and active if
+the action starts the funnel, or the action fails when the flow runs. When writing a file by hand, give the cohort as `{name}` only,
 since there is no source id to carry. `validate` reports a cohort with no name, no color, or a
 name an earlier cohort of the same funnel already takes, ignoring case, at
 `/cohorts/<index>/name` or `/cohorts/<index>/color`.

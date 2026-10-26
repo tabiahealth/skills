@@ -661,7 +661,11 @@ Funnels come with two limits worth saying before the write, not after it fails:
 A funnel's **cohorts** travel inside it, archived ones included, and the import creates them on
 the new funnel. A flow that names a cohort is resolved by that name in the target, so a cohort
 renamed after the flow was saved arrives under a name the flow no longer holds. `validate`
-reports a cohort with no name, no color or a repeated name at `/cohorts/<index>/...`.
+reports a cohort with no name, no color or a repeated name at `/cohorts/<index>/...`. Pointing
+the package at a funnel the target already has creates none of the file's cohorts, and the flows
+then run against that funnel's: before offering it, compare the cohorts the flows name with the
+existing funnel's, since a missing one (or an archived one, for a Start funnel) fails only when
+the flow runs.
 
 A **program** travels with its care pathways inside it: `export --program <id>` brings the
 program with every one of its pathways that is not archived, and `tabia ls program` lists the
