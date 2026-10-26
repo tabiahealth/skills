@@ -183,8 +183,8 @@ choose names that will not collide, so nobody has to make that choice on import.
 
 A funnel pointed at the existing one brings none of the file's cohorts: the flows run against
 that funnel's cohorts, and one it lacks (or has archived, for a Start funnel) fails with
-`funnel-cohort-not-found` or `funnel-cohort-archived` only when the flow runs, since neither the
-dry run nor `validate` checks it. Before recommending that choice, compare the cohorts the
+`funnel-cohort-not-found` or `funnel-cohort-archived` only when the flow runs, since `validate`
+does not check it. Before recommending that choice, compare the cohorts the
 package's flows name with the existing funnel's, and say which are missing.
 
 Nothing constrains a pathway's, a program's, a survey's or a working hours schedule's name.
