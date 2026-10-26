@@ -411,7 +411,7 @@ cannot make a call, say so and stop there, rather than reaching for the token.
 ## Reading an environment
 
 ```bash
-tabia ls pathway --search diabetes      # also: flow, survey, funnel, form-template, program. --json for machine output
+tabia ls pathway --search diabetes      # also: flow, survey, funnel, form-template, program, event-type. --json for machine output
 tabia api /currency                     # declared free of personal data: goes through
 tabia api /me --personal-data           # not declared — most endpoints are not
 tabia api '/pathway?size=5' --personal-data -q '.content[].name'
@@ -628,8 +628,8 @@ import into the wrong organization is the failure mode this naming exists to pre
 ### What the package carries, and what it does not
 
 Flows, surveys, message templates, message channels, the working hours schedules those channels
-select, funnels and form templates are carried: naming one anywhere in the file pulls it in. `export` takes `--pathway`, `--flow`, `--funnel`, `--form-template` and
-`--program`, each repeatable, so a funnel or a form template can also travel on its own. A form template is never pointed at
+select, funnels, form templates and event types are carried: naming one anywhere in the file pulls it in. `export` takes `--pathway`, `--flow`, `--funnel`, `--form-template`,
+`--program` and `--event-type`, each repeatable, so a funnel, a form template or an event type can also travel on its own. A form template is never pointed at
 an existing one: on a name clash the import stops and lists it, and the CLI never invents a name. Ask the
 person for the new name and pass it as `--rename <ref>=<name>`; a map that points the item at the existing
 template is refused by the server. A *referenced* pathway is not — it stays a reference for the person
@@ -639,6 +639,14 @@ A pathway flow node's `data.flow` and `data.channel` become placeholders and are
 flow and the channel the node points at travel with the pathway.
 Credentials never travel: a template is asked which integration to use, and a channel
 arrives with none. No patient data of any kind.
+
+An event type travels with the pathways whose events are of it and with the flows that create
+events of it. Its name is unique in the target, compared without regard to case: on a clash the
+dry run lists it with the id of the type holding the name, and the user chooses between
+`--rename <ref>=<name>` and pointing the package at that type, with a resolution for the event type
+item's own ref under `EventType`. Ask; never pick for them. A pathway's event carries only a reference
+to its type: a file exported before that, with the whole type inside the event, is refused with
+`pathway-import-event-type-outdated`, and the fix is to export it again from the source.
 
 A working hours schedule is created in the target unless the map points it at one the target
 already has, with a resolution for the schedule item's own ref under `WorkingHoursSchedule`.
