@@ -229,7 +229,7 @@ Importing is not publishing. Say this to the user rather than letting them disco
 | program | **a new program**, with the care pathways it carries created inside it as pathways arrive |
 | form template | **created whole**, never reused — on a name the organization already uses the import stops, and the operator picks a new name with `--rename` |
 | working hours schedule | as exported, never as the organization's default |
-| event type | **created with its fields, presets and tasks**, or pointed at one the organization already has; on a name it already uses the import stops until the operator renames it or points it at the existing type |
+| event type | **created with its fields, presets and tasks**, or pointed at one the organization already has; on a name it already uses the import stops until the operator renames it, or points it at the existing type when that type is active |
 
 A funnel carries its **cohorts** inside its payload, as `cohorts`: a list of `{name, description,
 color, archived}` with no ids, in the order they were created. `color` is one of `BLUE`, `GREEN`,
