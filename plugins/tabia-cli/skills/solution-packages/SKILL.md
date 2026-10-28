@@ -185,9 +185,11 @@ choose names that will not collide, so nobody has to make that choice on import.
 
 A funnel pointed at the existing one brings none of the file's cohorts: the flows run against
 that funnel's cohorts, and one it lacks (or has archived, for a Start funnel) fails with
-`funnel-cohort-not-found` or `funnel-cohort-archived` only when the flow runs, since `validate`
-does not check it. Before recommending that choice, compare the cohorts the
-package's flows name with the existing funnel's, and say which are missing.
+`funnel-cohort-not-found` or `funnel-cohort-archived` when the flow runs. `validate` warns about
+each such action before the write (`flow-import-funnel-cohort-not-found`,
+`flow-import-funnel-cohort-archived`, at the action's `.../data/cohort`) without refusing the
+import. Before recommending that choice, read those warnings, say which cohorts are missing, and
+let the user decide whether to add or unarchive them in the target first.
 
 Nothing constrains a pathway's, a program's, a survey's or a working hours schedule's name.
 
@@ -236,8 +238,11 @@ color, archived}` with no ids, in the order they were created. `color` is one of
 `PURPLE`, `ORANGE`, `RED`, `PINK`, `TURQUOISE` or `GRAY`. A flow that starts or searches a funnel on
 a cohort stores the cohort as `{id, name}`, and the target goes by the **name**, since the id is
 the source organization's: keep that name equal to one of the funnel's cohorts, and active if
-the action starts the funnel, or the action fails when the flow runs. When writing a file by hand, give the cohort as `{name}` only,
-since there is no source id to carry. `validate` reports a cohort with no name, no color, or a
+the action starts the funnel, or the action fails when the flow runs. The export brings the name
+up to date from the id when the cohort was renamed after the flow was saved. When writing a file
+by hand, give the cohort as `{name}` only, since there is no source id to carry, and `validate`
+warns about a name the funnel's cohorts lack.
+`validate` also reports a cohort with no name, no color, or a
 name an earlier cohort of the same funnel already takes, ignoring case, at
 `/cohorts/<index>/name` or `/cohorts/<index>/color`.
 
