@@ -1,0 +1,34 @@
+name: release-pr
+
+on:
+  push:
+    branches: [main]
+    paths: ['plugins/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  # Lets the job report the version-guard check on the release branch it pushes.
+  checks: write
+
+# Runs one at a time and never cancels a run halfway through a push; a queued run starts from
+# the newest main, so it covers whatever the run it replaces would have.
+concurrency:
+  group: release-pr
+  cancel-in-progress: false
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Open or update release pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_BRANCH: main
+        run: bash .github/scripts/release-pr.sh
