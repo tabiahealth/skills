@@ -137,13 +137,15 @@ A **care pathway** is never dragged in by being referenced — one pathway menti
 another leaves a placeholder, because packaging it would drag in a second care line
 nobody asked for. A **program** is never dragged in either: a pathway's program stays a
 placeholder unless the program is itself an item, and then the pathway belongs inside it. Flows, surveys, message templates, message channels, the working hours schedules those channels
-select, funnels and form templates are the opposite: naming one anywhere pulls it into the file. A funnel is pulled in only if it is published and has
-a live step; any other funnel stays a placeholder. A form template is pulled in only if it is
+select, funnels, form templates and event types are the opposite: naming one anywhere pulls it into the file. A funnel is pulled in only if it is published and has
+a live step; any other funnel stays a placeholder. A form template or an event type is pulled in only if it is
 not archived; an archived one stays a placeholder. An export whose every chosen item stays out is
 refused rather than written empty.
 
 The practical consequence when authoring: a flow your pathway starts belongs **in** the
-file as an item; a program, a team or a medical code belongs as a placeholder.
+file as an item; a program, a team or a medical code belongs as a placeholder. An event's `type`
+is always an `EventType` placeholder, never the type written inside the event: put the type in the
+file as an `EVENT_TYPE` item, with the same ref, when the target should get it.
 
 ### A program carries its care pathways inside it
 
@@ -229,6 +231,7 @@ Importing is not publishing. Say this to the user rather than letting them disco
 | program | **a new program**, with the care pathways it carries created inside it as pathways arrive |
 | form template | **created whole**, never reused — on a name the organization already uses the import stops, and the operator picks a new name with `--rename` |
 | working hours schedule | as exported, never as the organization's default |
+| event type | **created with its fields, presets and tasks**, or pointed at one the organization already has; on a name it already uses the import stops until the operator renames it, or points it at the existing type when that type is active |
 
 A funnel carries its **cohorts** inside its payload, as `cohorts`: a list of `{name, description,
 color, archived}` with no ids, in the order they were created. `color` is one of `BLUE`, `GREEN`,
