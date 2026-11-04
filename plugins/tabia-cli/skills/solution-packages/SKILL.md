@@ -189,7 +189,9 @@ that funnel's cohorts, and one it lacks (or has archived, for a Start funnel) fa
 each such action before the write (`flow-import-funnel-cohort-not-found`,
 `flow-import-funnel-cohort-archived`, at the action's `.../data/cohort`) without refusing the
 import. Before recommending that choice, read those warnings, say which cohorts are missing, and
-let the user decide whether to add or unarchive them in the target first.
+let the user decide whether to add or unarchive them in the target first. The same goes for a
+cohort an outcome of the funnel's steps names (`funnel-import-outcome-cohort-not-found`,
+`funnel-import-outcome-cohort-archived`): without it the outcome stops moving patients to a cohort.
 
 Nothing constrains a pathway's, a program's, a survey's or a working hours schedule's name.
 
@@ -227,7 +229,7 @@ Importing is not publishing. Say this to the user rather than letting them disco
 | survey | live only if it was live where it came from |
 | message template | **pending approval** by the messaging provider; a flow that sends it fails until approved |
 | message channel | **without its integration**, so it carries no credential and sends nothing until one is attached |
-| funnel | **an unpublished draft** — publish it before a flow can start it or conclude a step of it. Its cohorts come with it, archived ones included |
+| funnel | **an unpublished draft** — publish it before a flow can start it or conclude a step of it. Its cohorts come with it, archived ones included, and so does the cohort each outcome sets |
 | program | **a new program**, with the care pathways it carries created inside it as pathways arrive |
 | form template | **created whole**, never reused — on a name the organization already uses the import stops, and the operator picks a new name with `--rename` |
 | working hours schedule | as exported, never as the organization's default |
@@ -245,6 +247,16 @@ warns about a name the funnel's cohorts lack.
 `validate` also reports a cohort with no name, no color, or a
 name an earlier cohort of the same funnel already takes, ignoring case, at
 `/cohorts/<index>/name` or `/cohorts/<index>/color`.
+
+An outcome of a funnel step can also move the patient to a cohort when it is chosen. It is written
+on the outcome as `cohortName`, the **name** of one of the funnel's cohorts, never an id, and it is
+optional: an outcome without it leaves the patient's cohort as it is. The import links each such
+outcome to the funnel's active cohort of that name, ignoring case, and one the funnel has no active
+cohort for ends up with no cohort. `validate` warns, without refusing the import, about an outcome
+naming a cohort the funnel lacks (`funnel-import-outcome-cohort-not-found`) or has archived
+(`funnel-import-outcome-cohort-archived`), at `/steps/<index>/outcomes/<index>/cohortName`. When
+writing a file by hand, list the cohort in the funnel's `cohorts` first, active, and give the
+outcome its name.
 
 The message template's integration is asked for at import, because it decides what kind of
 template is created. The channel's is not asked for and is left empty — an organization
