@@ -675,6 +675,13 @@ that funnel's: `validate` warns (`flow-import-funnel-cohort-not-found`,
 `flow-import-funnel-cohort-archived`) about each flow action naming a cohort that funnel lacks or,
 for a Start funnel, has archived. Say so before offering that choice, and let the user decide.
 
+An outcome of a funnel step can also move the patient to a cohort, and the file carries it as the
+cohort's name (`cohortName` on the outcome). The import links it to the
+active cohort of that name in the new funnel, and `validate` warns about an outcome naming a cohort
+the funnel lacks or has archived (`funnel-import-outcome-cohort-not-found`,
+`funnel-import-outcome-cohort-archived`, at `/steps/<index>/outcomes/<index>/cohortName`), so say
+which outcomes would stop moving patients before offering to point the package at an existing funnel.
+
 A **program** travels with its care pathways inside it: `export --program <id>` brings the
 program with every one of its pathways that is not archived, and `tabia ls program` lists the
 programs that are not archived. The rest of the package points at those pathways by the ref each
